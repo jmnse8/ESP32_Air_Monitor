@@ -37,7 +37,7 @@ i2c_port_t i2c_num = I2C_MASTER_NUM;
 static const char *TAG = "sgp30-test";
 
 
-
+/* 
 esp_err_t i2c_master_driver_initialize(void) {
     int i2c_master_port = I2C_MASTER_NUM;
     i2c_config_t conf;
@@ -52,7 +52,7 @@ esp_err_t i2c_master_driver_initialize(void) {
     i2c_param_config(i2c_master_port, &conf);
     return i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }
-
+ */
 
 /**
  * @brief generic function for reading I2C data

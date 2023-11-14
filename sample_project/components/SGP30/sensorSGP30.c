@@ -7,19 +7,30 @@
 #include "sdkconfig.h"
 #include "esp_event.h"
 
-#include "i2c_config.h"
-#include "si7021.h"
-#include "sensor.h"
+#include "sensorSGP30.h"
+#include "SGP30.h"
+#include "I2C.h"
 
 
 ESP_EVENT_DEFINE_BASE(SENSOR_EVENT_BASE);
 
+
+#define I2C_MASTER_SCL_IO CONFIG_I2C_MASTER_SCL               /*!< gpio number for I2C master clock */
+#define I2C_MASTER_SDA_IO CONFIG_I2C_MASTER_SDA               /*!< gpio number for I2C master data  */
+#define I2C_MASTER_NUM I2C_NUMBER(CONFIG_I2C_MASTER_PORT_NUM) /*!< I2C port number for master dev */
+#define I2C_MASTER_FREQ_HZ CONFIG_I2C_MASTER_FREQUENCY        /*!< I2C master clock frequency */
+#define I2C_MASTER_TX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
+#define I2C_MASTER_RX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
+
+i2c_port_t i2c_num = I2C_MASTER_NUM;
+
 static void sensor_timer_callback(void* arg);
 
-static const char* TAG = "SENSOR";
+static const char* TAG = "SENSOR_SGP30";
 static int SENSOR_MODE;
-static int SENSOR_FREQ = CONFIG_SENSOR_FREQ;
+static int SENSOR_FREQ;// = CONFIG_SENSOR_FREQ;
 
+sgp30_dev_t main_sgp30_sensor;
 
 static esp_timer_handle_t sensor_timer;
 
@@ -56,7 +67,13 @@ void start_sensor(void){
 
 
 void init_sensor(void){
+
+    i2c_master_driver_initialize(I2C_MASTER_SCL_IO, I2C_MASTER_SDA_IO, I2C_MASTER_NUM, I2C_MASTER_FREQ_HZ, I2C_MASTER_TX_BUF_DISABLE);
+
+
+    // TODO:leer 14 veces
     configure_timer();
+
 }
 
 

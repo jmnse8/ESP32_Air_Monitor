@@ -13,7 +13,7 @@
 
 #include "SGP30.h"
 
-static const char *TAG = "SGP30-LIB";
+static const char *TAG = "SGP30";
 
 /*******************************************
  ********** Private Variables  *************

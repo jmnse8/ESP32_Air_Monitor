@@ -71,7 +71,21 @@ void init_sensor(void){
     i2c_master_driver_initialize(I2C_MASTER_SCL_IO, I2C_MASTER_SDA_IO, I2C_MASTER_NUM, I2C_MASTER_FREQ_HZ, I2C_MASTER_TX_BUF_DISABLE);
 
 
-    // TODO:leer 14 veces
+    sgp30_init(&main_sgp30_sensor, (sgp30_read_fptr_t)readResponseBytes, (sgp30_write_fptr_t)writeCommandBytes);
+
+    // SGP30 needs to be read every 1s and sends TVOC = 400 14 times when initializing
+    for (int i = 0; i < 14; i++) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        sgp30_IAQ_measure(&main_sgp30_sensor);
+        ESP_LOGI(TAG, "SGP30 Calibrating... TVOC: %d,  eCO2: %d",  main_sgp30_sensor.TVOC, main_sgp30_sensor.eCO2);
+    }
+
+    // Read initial baselines 
+    uint16_t eco2_baseline, tvoc_baseline;
+    sgp30_get_IAQ_baseline(&main_sgp30_sensor, &eco2_baseline, &tvoc_baseline);
+    ESP_LOGI(TAG, "BASELINES - TVOC: %d,  eCO2: %d",  tvoc_baseline, eco2_baseline);
+
+
     configure_timer();
 
 }

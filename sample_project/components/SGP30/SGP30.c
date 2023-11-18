@@ -27,7 +27,7 @@ static uint8_t MEASURE_AIR_QUALITY[2] =     { 0x20, 0x08 };
 static uint8_t GET_BASELINE[2] =            { 0x20, 0x15 };
 static uint8_t SET_BASELINE[2] =            { 0x20, 0x1E };
 static uint8_t SET_HUMIDITY[2] =            { 0x20, 0x61 };
-static uint8_t MEASURE_TEST[2] =            { 0x20, 0x32 };
+//static uint8_t MEASURE_TEST[2] =            { 0x20, 0x32 };
 static uint8_t GET_FEATURE_SET_VERSION[2] = { 0x20, 0x2F };
 static uint8_t MEASURE_RAW_SIGNALS[2] =     { 0x20, 0x50 };
 static uint8_t GET_SERIAL_ID[2] =           { 0x36, 0x82 };
@@ -71,10 +71,11 @@ static uint8_t sgp30_calculate_CRC(uint8_t *data, uint8_t len);
  ****** Public Functions Definitions *******
  *******************************************/
 
-void sgp30_init(sgp30_dev_t *sensor, sgp30_read_fptr_t user_i2c_read, sgp30_write_fptr_t user_i2c_write) {
+void sgp30_init(sgp30_dev_t *sensor, sgp30_read_fptr_t user_i2c_read, sgp30_write_fptr_t user_i2c_write, i2c_port_t i2c_num) {
     sensor->intf_ptr = &SGP_DEVICE_ADDR; 
     sensor->i2c_read = user_i2c_read;
     sensor->i2c_write = user_i2c_write;
+    sensor->i2c_num = i2c_num;
 
     sgp30_execute_command(sensor, GET_SERIAL_ID, 2, 10, sensor->serial_number, 3);
     ESP_LOGI(TAG, "%s - Serial Number: %02x %02x %02x", __FUNCTION__, sensor->serial_number[0],
@@ -182,7 +183,7 @@ static esp_err_t sgp30_execute_command(sgp30_dev_t *device, uint8_t command[], u
     esp_err_t err;
 
     // Writes SGP30 Command
-    err = device->i2c_write(NULL_REG, command, command_len, device->intf_ptr);
+    err = device->i2c_write(device->i2c_num, command, command_len, device->intf_ptr);//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to write SGP30 I2C command! err: 0x%02x", err);
@@ -201,7 +202,7 @@ static esp_err_t sgp30_execute_command(sgp30_dev_t *device, uint8_t command[], u
     uint8_t reply_buffer[reply_len];
 
     // Tries to read device reply
-    err = device->i2c_read(NULL_REG, reply_buffer, reply_len, device->intf_ptr);
+    err = device->i2c_read(device->i2c_num, reply_buffer, reply_len, device->intf_ptr);//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to read SGP30 I2C command reply! err: 0x%02x", err);

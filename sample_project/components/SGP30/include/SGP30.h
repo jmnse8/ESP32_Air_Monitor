@@ -25,6 +25,7 @@
 
 #include "esp_log.h"
 #include "esp_err.h"
+#include "I2C.h"
 
 /***********************************
     Default I2C address
@@ -77,6 +78,8 @@ typedef struct sgp30_dev {
 
     /**< I2C write driver function pointer */
     sgp30_write_fptr_t i2c_write;
+
+    i2c_port_t i2c_num;
 } sgp30_dev_t;
 
 
@@ -84,7 +87,7 @@ typedef struct sgp30_dev {
  *  @brief  Setups the hardware and detects a valid SGP30. Initializes I2C
  *          then reads the serialnumber and checks that we are talking to an SGP30.
  */
-void sgp30_init(sgp30_dev_t *sensor, sgp30_read_fptr_t user_i2c_read, sgp30_write_fptr_t user_i2c_write);
+void sgp30_init(sgp30_dev_t *sensor, sgp30_read_fptr_t user_i2c_read, sgp30_write_fptr_t user_i2c_write, i2c_port_t i2c_num);
 
 /**
  *   @brief  Commands the sensor to perform a soft reset using the "General

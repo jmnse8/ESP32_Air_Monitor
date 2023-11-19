@@ -11,7 +11,7 @@
  * @date 10/2020
  */
 
-#include "SGP30.h"
+#include "c_SGP30.h"
 
 static const char *TAG = "SGP30";
 
@@ -183,7 +183,7 @@ static esp_err_t sgp30_execute_command(sgp30_dev_t *device, uint8_t command[], u
     esp_err_t err;
 
     // Writes SGP30 Command
-    err = device->i2c_write(device->i2c_num, command, command_len, device->intf_ptr);//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    err = device->i2c_write(device->i2c_num, command, command_len, device->intf_ptr);
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to write SGP30 I2C command! err: 0x%02x", err);
@@ -202,7 +202,7 @@ static esp_err_t sgp30_execute_command(sgp30_dev_t *device, uint8_t command[], u
     uint8_t reply_buffer[reply_len];
 
     // Tries to read device reply
-    err = device->i2c_read(device->i2c_num, reply_buffer, reply_len, device->intf_ptr);//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    err = device->i2c_read(device->i2c_num, reply_buffer, reply_len, device->intf_ptr);
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to read SGP30 I2C command reply! err: 0x%02x", err);

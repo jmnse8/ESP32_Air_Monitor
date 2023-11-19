@@ -25,7 +25,7 @@
 
 #include "esp_log.h"
 #include "esp_err.h"
-#include "I2C.h"
+#include "c_I2C.h"
 
 /***********************************
     Default I2C address
@@ -45,9 +45,9 @@
 
 
 /*** I2C Driver Function Pointers ***/
-typedef int8_t (*sgp30_read_fptr_t)(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr);
+typedef esp_err_t (*sgp30_read_fptr_t)(const i2c_port_t i2c_num, uint8_t *output, const size_t nbytes, void *intf_ptr);
 
-typedef int8_t (*sgp30_write_fptr_t)(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr);
+typedef esp_err_t (*sgp30_write_fptr_t)(const i2c_port_t i2c_num, const uint8_t *i2c_command, const size_t nbytes, void *intf_ptr);
 
 /** SGP30 Main Data Struct */
 typedef struct sgp30_dev {

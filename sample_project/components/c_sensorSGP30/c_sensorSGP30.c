@@ -1,18 +1,8 @@
 #include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include "esp_log.h"
-#include "esp_timer.h"
-#include "esp_sleep.h"
-#include "sdkconfig.h"
-#include "esp_event.h"
-
-#include "sensorSGP30.h"
-#include "SGP30.h"
-#include "I2C.h"
+#include "c_sensorSGP30.h"
 
 
-ESP_EVENT_DEFINE_BASE(SENSOR_EVENT_BASE);
+ESP_EVENT_DEFINE_BASE(SENSORSGP30_EVENT_BASE);
 
 
 #define _I2C_NUMBER(num) I2C_NUM_##num
@@ -37,7 +27,7 @@ sgp30_dev_t main_sgp30_sensor;
 
 static esp_timer_handle_t sensor_timer;
 
-void configure_timer_sgp30(){
+void configure_timer_sgp30() {
     const esp_timer_create_args_t sensor_timer_args = {
             .callback = &sensor_timer_callback_sgp30,
             .name = "sensor_timer"
@@ -48,8 +38,17 @@ void configure_timer_sgp30(){
     ESP_ERROR_CHECK(esp_timer_start_periodic(sensor_timer, SENSOR_FREQ*1000000));
 }
 
+void set_sensor_mode(int m){
+    if(m==SENSORSGP30_ALL_MODE
+            || m==SENSORSGP30_TVOC_MODE
+            || m==SENSORSGP30_ECO2_MODE
+            || m==SENSORSGP30_DISABLED_MODE){
+        SENSOR_MODE = m;
+    }
+}
 
-int change_sample_period_sgp30(int sec){
+
+int change_sample_period_sgp30(int sec) {
     if(sec>0){
         ESP_ERROR_CHECK(esp_timer_stop(sensor_timer));
         ESP_ERROR_CHECK(esp_timer_start_periodic(sensor_timer, sec*1000000));
@@ -59,17 +58,17 @@ int change_sample_period_sgp30(int sec){
 }
 
 
-void stop_sensor_sgp30(void){
+void stop_sensor_sgp30(void) {
     ESP_ERROR_CHECK(esp_timer_stop(sensor_timer));
     ESP_LOGI(TAG, "Stopped sendor SGP30");
 }
 
-void start_sensor_sgp30(void){
+void start_sensor_sgp30(void) {
     ESP_ERROR_CHECK(esp_timer_start_periodic(sensor_timer, SENSOR_FREQ*1000000));
 }
 
 
-void init_sensor_sgp30(void){
+void init_sensor_sgp30(void) {
 
     i2c_master_driver_initialize(i2c_num, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, I2C_MASTER_FREQ_HZ, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE);
 
@@ -94,23 +93,18 @@ void init_sensor_sgp30(void){
 }
 
 
-void sensor_timer_callback_sgp30(void* arg)
-{
-
+void sensor_timer_callback_sgp30(void* arg) {
     sgp30_IAQ_measure(&main_sgp30_sensor);
-    ESP_LOGI(TAG, "TVOC: %d,  eCO2: %d",  main_sgp30_sensor.TVOC, main_sgp30_sensor.eCO2);
-    /* if(SENSOR_MODE==SENSOR_TEMP_MODE || SENSOR_MODE==SENSOR_ALL_MODE){
-        float temp;
-        readTemperature(0, &temp);
-        esp_event_post(SENSOR_EVENT_BASE, SENSOR_TEMP_DATA, &temp, sizeof(temp), 0);
+
+    if(SENSOR_MODE==SENSORSGP30_TVOC_MODE || SENSOR_MODE==SENSORSGP30_ALL_MODE){
+        uint16_t tvoc = main_sgp30_sensor.TVOC;
+        esp_event_post(SENSORSGP30_EVENT_BASE, SENSORSGP30_TVOC_DATA, &tvoc, sizeof(tvoc), 0);
     }
 
-    if(SENSOR_MODE==SENSOR_HUM_MODE || SENSOR_MODE==SENSOR_ALL_MODE){
-        float hum;
-        readHumidity(0, &hum);
-        esp_event_post(SENSOR_EVENT_BASE, SENSOR_HUM_DATA, &hum, sizeof(hum), 0);
-    } */
-    
+    if(SENSOR_MODE==SENSORSGP30_ECO2_MODE || SENSOR_MODE==SENSORSGP30_ALL_MODE){
+        uint16_t eCO2 = main_sgp30_sensor.eCO2;
+        esp_event_post(SENSORSGP30_EVENT_BASE, SENSORSGP30_ECO2_DATA, &eCO2, sizeof(eCO2), 0);
+    }
 }
 
 

@@ -24,6 +24,9 @@ menu "SGP30 I2C Peripheral Configuration"
             default 100000
             help
                 I2C Speed of Master device.
+    endmenu
+
+    menu "Sensor"
 
         config SENSOR_FREQ
             int "Sensor sampling rate in seconds"
@@ -31,6 +34,7 @@ menu "SGP30 I2C Peripheral Configuration"
             default 2
             help
                 Rate at which a sensor collects data in seconds.
+        
     endmenu
 
 endmenu

@@ -1,16 +1,14 @@
 
 #include <stdio.h>
 #include "esp_log.h"
-#include "esp_log.h"
 #include "c_sensorSGP30.h"
 #include "c_I2C.h"
 #include "c_wifiConnection.h"
 
-#include "mqtt_com.h"
+#include "c_mqtt.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_event.h"
-#include "esp_log.h"
 #include "protocol_examples_common.h"
 
 

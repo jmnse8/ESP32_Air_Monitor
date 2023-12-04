@@ -22,7 +22,7 @@
 #include "esp_err.h"
 #include "mqtt_client.h"
 
-#include "mqtt_com.h"
+#include "c_mqtt.h"
 
 
 ESP_EVENT_DEFINE_BASE(MQTT_COM_EVENT_BASE);

@@ -1,0 +1,9 @@
+menu "Com MQTT Configuration"
+
+    config BROKER_URL
+        string "Broker URL"
+        default "mqtt://test.mosquitto.org"
+        help
+            URL of the broker to connect to
+
+endmenu

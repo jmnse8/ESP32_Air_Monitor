@@ -57,3 +57,4 @@ dkms.conf
 **/.idea/
 **/sdkconfig
 **/sdkconfig.old
+*.old

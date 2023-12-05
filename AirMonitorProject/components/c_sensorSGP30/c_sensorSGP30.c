@@ -79,7 +79,7 @@ void init_sensor_sgp30(void) {
     for (int i = 0; i < 14; i++) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         sgp30_IAQ_measure(&main_sgp30_sensor);
-        ESP_LOGI(TAG, "SGP30 Calibrating... TVOC: %d,  eCO2: %d",  main_sgp30_sensor.TVOC, main_sgp30_sensor.eCO2);
+        //ESP_LOGI(TAG, "SGP30 Calibrating... TVOC: %d,  eCO2: %d",  main_sgp30_sensor.TVOC, main_sgp30_sensor.eCO2);
     }
 
     // Read initial baselines 
@@ -87,6 +87,7 @@ void init_sensor_sgp30(void) {
     sgp30_get_IAQ_baseline(&main_sgp30_sensor, &eco2_baseline, &tvoc_baseline);
     ESP_LOGI(TAG, "BASELINES - TVOC: %d,  eCO2: %d",  tvoc_baseline, eco2_baseline);
 
+    SENSOR_MODE = SENSORSGP30_ALL_MODE;
 
     configure_timer_sgp30();
 

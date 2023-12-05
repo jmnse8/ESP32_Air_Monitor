@@ -97,13 +97,13 @@ void sensor_timer_callback_si7021(void* arg)
 {
     if(SENSOR_MODE==SENSORSI7021_TEMP_MODE || SENSOR_MODE==SENSORSI7021_ALL_MODE){
         float temp;
-        readTemperature(i2c_num, &temp);    
+        readTemperature(0, &temp);    
         esp_event_post(SENSORSI7021_EVENT_BASE, SENSORSI7021_TEMP_DATA, &temp, sizeof(temp), 0);
     }
 
     if(SENSOR_MODE==SENSORSI7021_HUM_MODE || SENSOR_MODE==SENSORSI7021_ALL_MODE){
         float hum;
-        readHumidity(i2c_num, &hum);    
+        readHumidity(0, &hum);    
         esp_event_post(SENSORSI7021_EVENT_BASE, SENSORSI7021_HUM_DATA, &hum, sizeof(hum), 0);
     }
     

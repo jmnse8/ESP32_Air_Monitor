@@ -25,7 +25,7 @@
 #include "c_mqtt.h"
 
 
-ESP_EVENT_DEFINE_BASE(MQTT_COM_EVENT_BASE);
+ESP_EVENT_DEFINE_BASE(C_MQTT_EVENT_BASE);
 
 enum {
     MQTT_SETUP,
@@ -35,10 +35,9 @@ enum {
 };
 
 int MQTT_STATUS = MQTT_SETUP;
-int MQTT_QOS = 0;
+int MQTT_QOS;
 
-static const char *TAG = "MQTT_COM";
-static const char *TOPIC = "3/2/TMP";
+static const char *TAG = "C_MQTT";
 static char *BROKER = CONFIG_BROKER_URL;
 
 static esp_mqtt_client_handle_t mqtt_client;
@@ -100,6 +99,9 @@ int publish_to_topic(char* topic, uint8_t* data){
 }
 
 
+/*
+    Put the received data into a struct and post it through the default event loop
+*/
 static void handle_received_data(const char* topic, int topic_len, const char* data, int data_len) {
 
     // Allocate memory for the struct
@@ -128,7 +130,7 @@ static void handle_received_data(const char* topic, int topic_len, const char* d
     mqtt_data->data[data_len] = '\0';    // Null-terminate the string
 
     // Post the event
-    esp_event_post(MQTT_COM_EVENT_BASE, MQTT_COM_EVENT_RECEIVED_DATA, mqtt_data, sizeof(struct mqtt_com_data), 0);
+    esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, mqtt_data, sizeof(struct mqtt_com_data), 0);
 }
 
 /*
@@ -142,47 +144,54 @@ static void handle_received_data(const char* topic, int topic_len, const char* d
  * @param event_data The data for the event, esp_mqtt_event_handle_t.
  */
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data){
-    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32 "", base, event_id);
     esp_mqtt_event_handle_t event = event_data;
+
     switch ((esp_mqtt_event_id_t)event_id) {
-    case MQTT_EVENT_CONNECTED:
-        MQTT_STATUS = MQTT_CONNECTED;
-        ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        esp_event_post(MQTT_COM_EVENT_BASE, MQTT_COM_EVENT_CONNECTED, NULL, 0, 0);
-        break;
-    case MQTT_EVENT_DISCONNECTED:
-        MQTT_STATUS = MQTT_ERR;
-        ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-        esp_event_post(MQTT_COM_EVENT_BASE, MQTT_COM_EVENT_DISCONNECTED, NULL, 0, 0);
-        break;
-    case MQTT_EVENT_SUBSCRIBED:
-        ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        break;
-    case MQTT_EVENT_UNSUBSCRIBED:
-        ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
-        break;
-    case MQTT_EVENT_PUBLISHED:
-        ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
-        break;
-    case MQTT_EVENT_DATA:
-        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        //printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-        //printf("DATA=%.*s\r\n", event->data_len, event->data);
-        handle_received_data((const char*)event->topic, event->topic_len, (const char*)event->data, event->data_len);
-        break;
-    case MQTT_EVENT_ERROR:
-        MQTT_STATUS = MQTT_ERR;
-        ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
-            log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
-            log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
-            log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
-            ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
-        }
-        break;
-    default:
-        ESP_LOGI(TAG, "Other event id:%d", event->event_id);
-        break;
+
+        case MQTT_EVENT_CONNECTED:
+            MQTT_STATUS = MQTT_CONNECTED;
+            ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+            esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_CONNECTED, NULL, 0, 0);
+            break;
+
+        case MQTT_EVENT_DISCONNECTED:
+            MQTT_STATUS = MQTT_ERR;
+            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+            esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_DISCONNECTED, NULL, 0, 0);
+            break;
+
+        case MQTT_EVENT_SUBSCRIBED:
+            ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+            break;
+
+        case MQTT_EVENT_UNSUBSCRIBED:
+            ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
+            break;
+
+        case MQTT_EVENT_PUBLISHED:
+            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+            break;
+
+        case MQTT_EVENT_DATA:
+            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            //printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+            //printf("DATA=%.*s\r\n", event->data_len, event->data);
+            handle_received_data((const char*)event->topic, event->topic_len, (const char*)event->data, event->data_len);
+            break;
+
+        case MQTT_EVENT_ERROR:
+            MQTT_STATUS = MQTT_ERR;
+            ESP_LOGE(TAG, "MQTT_EVENT_ERROR");
+            if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+                log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
+                log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
+                log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
+                ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
+            }
+            break;
+        default:
+            ESP_LOGI(TAG, "Other event id:%d", event->event_id);
+            break;
     }
 }
 
@@ -199,7 +208,7 @@ static void mqtt_start(void){
 
 void init_mqtt(){
     MQTT_STATUS = MQTT_INIT;
-
+    MQTT_QOS = 0;
     esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
     esp_log_level_set("transport", ESP_LOG_DEBUG);
     esp_log_level_set("mqtt_client", ESP_LOG_DEBUG);

@@ -22,17 +22,5 @@ https://github.com/adafruit/Adafruit_SGP30
 
 - Provisionado:
 
-### Jerarquía MQTT
-
-EDIFICIO/NUMPLANTA/SALA/SENSOR
-
-- Ejemplo:
-    Edificio 5, planta 2, sala 12 y sensor humedad
-    5/2/12/HUM
-
-
-EDIFICIO/NUMPLANTA/SALA/SENSOR/DIS -> desactiva el sensor
-
-EDIFICIO/NUMPLANTA/SALA/SENSOR/ENB -> activa el sensor
-
-EDIFICIO/NUMPLANTA/SALA/SENSOR/FRQ -> actualiza la frecuencia de muestreo
+### MQTT
+[Mira este readme](AirMonitorProject/components/c_mqtt/README.md)

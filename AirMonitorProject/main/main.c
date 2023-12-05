@@ -12,59 +12,10 @@
 #include "c_wifiConnection.h"
 #include "c_mqtt.h"
 
-#include "mqtt/mqtt_handler.h"
+#include "mqtt_handler.h"
 
 static const char* TAG = "MAIN";
 
-/*
-static void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
-{
-    switch(id){
-        case C_MQTT_EVENT_CONNECTED:
-            ESP_LOGI(TAG, "MQTT CONNECTED");
-            subscribe_to_topic("3/2/TMP");
-            publish_to_topic("3/2/TMP/FREQ", (uint8_t *)10);
-        break;
-        case C_MQTT_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "MQTT DISCONNECTED");
-        break;
-        case C_MQTT_EVENT_RECEIVED_DATA:
-            struct mqtt_com_data* mqtt_data = (struct mqtt_com_data*)event_data;
-            ESP_LOGI(TAG, "MQTT Received data %s from topìc %s", mqtt_data->data, mqtt_data->topic);
-            
-            switch(mqtt_topic_parser(mqtt_data->topic)){
-                case C_MQTT_FREQ_TOPIC:
-                    int res = parse_int_data(mqtt_data->data);
-                    if (res > 0) {
-                        //change_sample_period_sgp30(res);
-                        ESP_LOGI(TAG, "FREQ value is %d", res);
-                    } else {
-                        ESP_LOGE(TAG, "FREQ value is invalid: %s", mqtt_data->data);
-                    }
-                    
-                break;
-                case C_MQTT_ONOFF_TOPIC:
-                    switch (parse_int_data(mqtt_data->data)) {
-                        case 0:
-                            stop_sensor_sgp30();
-                            break;
-                        case 1:
-                            start_sensor_sgp30();
-                            break;
-                        default:
-                            ESP_LOGE(TAG, "ONOFF value is invalid: %s", mqtt_data->data);
-                    }
-                break;
-
-                default:
-                    ESP_LOGE(TAG, "UNKNOWN TOPIC: %s", mqtt_data->topic);
-                break;
-            }
-        break;
-
-    }
-}
-*/
 
 void init_event_handlers(){
     c_mqtt_init_event_handler();

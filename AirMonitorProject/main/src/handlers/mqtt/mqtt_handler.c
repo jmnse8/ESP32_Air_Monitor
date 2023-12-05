@@ -27,10 +27,10 @@ static void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, 
         case C_MQTT_EVENT_RECEIVED_DATA:
             struct mqtt_com_data* mqtt_data = (struct mqtt_com_data*)event_data;
             ESP_LOGI(TAG, "MQTT Received data %s from topìc %s", mqtt_data->data, mqtt_data->topic);
-            
+            int res;
             switch(mqtt_topic_parser(mqtt_data->topic)){
-                case C_MQTT_FREQ_TOPIC:
-                    int res = parse_int_data(mqtt_data->data);
+                case MQTT_FREQ_TOPIC:
+                    res = parse_int_data(mqtt_data->data);
                     if (res > 0) {
                         //change_sample_period_sgp30(res);
                         ESP_LOGI(TAG, "FREQ value is %d", res);
@@ -39,7 +39,7 @@ static void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, 
                     }
                     
                 break;
-                case C_MQTT_ONOFF_TOPIC:
+                case MQTT_ONOFF_TOPIC:
                     switch (parse_int_data(mqtt_data->data)) {
                         case 0:
                             ESP_LOGI(TAG, "SENSOR OFF");
@@ -52,6 +52,12 @@ static void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, 
                         default:
                             ESP_LOGE(TAG, "ONOFF value is invalid: %s", mqtt_data->data);
                     }
+                break;
+                case MQTT_MODE_TOPIC:
+                    res = parse_int_data(mqtt_data->data);
+                    ESP_LOGI(TAG, "SENSOR MODE SET TO %d", res);
+
+                    //set_sensor_mode_sgp30(res);
                 break;
 
                 default:

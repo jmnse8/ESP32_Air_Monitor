@@ -2,9 +2,10 @@
 #define __MQTT_PARSER
 
 enum{
-    C_MQTT_INVALID_TOPIC,
-    C_MQTT_FREQ_TOPIC,
-    C_MQTT_ONOFF_TOPIC
+    MQTT_INVALID_TOPIC,
+    MQTT_FREQ_TOPIC,
+    MQTT_ONOFF_TOPIC,
+    MQTT_MODE_TOPIC
 };
 
 int mqtt_topic_parser(char *topic);

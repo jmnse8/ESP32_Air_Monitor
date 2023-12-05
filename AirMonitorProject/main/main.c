@@ -1,19 +1,40 @@
-
 #include <stdio.h>
 #include "esp_log.h"
+#include "esp_event.h"
+#include "c_sensorSI7021.h"
 #include "c_sensorSGP30.h"
-#include "c_I2C.h"
 #include "c_wifiConnection.h"
 
 #include "c_mqtt.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_event.h"
-#include "protocol_examples_common.h"
 
+static const char* TAG = "main";
 
-static const char* TAG = "MAIN";
+static void sensorSI7021_event_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data){
+   
+    float value = *((float*)event_data);
+    
+     if(id==SENSORSI7021_HUM_DATA){
+            ESP_LOGI(TAG, "HUM: %f",  value);
+        }
+        else{
+            ESP_LOGI(TAG, "TEMP: %f",  value);
+        }
+}
 
+static void sensorSGP30_event_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data){
+   
+    uint16_t value = *((uint16_t*)event_data);
+    
+     if(id==SENSORSGP30_TVOC_DATA){
+            ESP_LOGI(TAG, "TVOC: %d",  value);
+        }
+        else{
+            ESP_LOGI(TAG, "ECO2: %d",  value);
+        }
+}
 
 static void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
 {
@@ -40,6 +61,11 @@ void init_event_handlers(){
     ESP_ERROR_CHECK(esp_event_handler_register(MQTT_COM_EVENT_BASE, MQTT_COM_EVENT_DISCONNECTED, mqtt_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(MQTT_COM_EVENT_BASE, MQTT_COM_EVENT_RECEIVED_DATA, mqtt_handler, NULL));
 
+    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSI7021_EVENT_BASE, SENSORSI7021_TEMP_DATA, sensorSI7021_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSI7021_EVENT_BASE, SENSORSI7021_HUM_DATA, sensorSI7021_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSGP30_EVENT_BASE, SENSORSGP30_TVOC_DATA, sensorSGP30_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSGP30_EVENT_BASE, SENSORSGP30_ECO2_DATA, sensorSGP30_event_handler, NULL));
+    
 }
 
 
@@ -47,13 +73,16 @@ void setup(){
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    //ESP_ERROR_CHECK(example_connect());
 
     wifi_init();
     init_mqtt();
 
     init_event_handlers();
+
+    init_sensor_si7021();
+    init_sensor_sgp30();
 }
+
 
 
 void app_main(void){

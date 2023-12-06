@@ -12,8 +12,8 @@
 
 static const char* TAG = "MQTT_MANAGER";
 
-static void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
-{
+void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data) {
+    
     switch(id){
         case C_MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT CONNECTED");
@@ -69,12 +69,5 @@ static void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, 
     }
 }
 
-void c_mqtt_init_event_handler(){
-
-    ESP_ERROR_CHECK(esp_event_handler_register(C_MQTT_EVENT_BASE, C_MQTT_EVENT_CONNECTED, mqtt_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(C_MQTT_EVENT_BASE, C_MQTT_EVENT_DISCONNECTED, mqtt_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, mqtt_handler, NULL));
-
-}
 
 

@@ -1,4 +1,4 @@
 #include "esp_event.h"
 
-void c_mqtt_init_event_handler();
+void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data);
 

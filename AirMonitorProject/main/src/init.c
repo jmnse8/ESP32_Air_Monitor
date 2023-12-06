@@ -1,4 +1,35 @@
-#include "init.h"
+#include <stdio.h>
+#include <regex.h>
+#include "esp_log.h"
+#include "nvs_flash.h"
+#include "esp_netif.h"
+#include "esp_event.h"
+#include "protocol_examples_common.h"
+
+#include "c_sensorSGP30.h"
+#include "c_I2C.h"
+#include "c_wifiConnection.h"
+#include "c_mqtt.h"
+#include "c_sensorSI7021.h"
+
+#include "mqtt_handler.h"
+#include "sensor_handler.h"
+
+
+static void init_event_handlers(){
+
+    //MQTT
+    ESP_ERROR_CHECK(esp_event_handler_register(C_MQTT_EVENT_BASE, C_MQTT_EVENT_CONNECTED, mqtt_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(C_MQTT_EVENT_BASE, C_MQTT_EVENT_DISCONNECTED, mqtt_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, mqtt_handler, NULL));
+
+    //SENSORES
+    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSI7021_EVENT_BASE, SENSORSI7021_TEMP_DATA, sensorSI7021_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSI7021_EVENT_BASE, SENSORSI7021_HUM_DATA, sensorSI7021_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSGP30_EVENT_BASE, SENSORSGP30_TVOC_DATA, sensorSGP30_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSGP30_EVENT_BASE, SENSORSGP30_ECO2_DATA, sensorSGP30_event_handler, NULL));
+    
+}
 
 
 void setup(){
@@ -11,22 +42,7 @@ void setup(){
     wifi_init();
     init_mqtt();
 
-    init_sensor_si7021();
-    init_sensor_sgp30();
+    //init_sensor_si7021();
+    //init_sensor_sgp30();
 }
 
-
-void init_event_handlers(){
-
-    //MQTT
-    //ESP_ERROR_CHECK(esp_event_handler_register(MQTT_COM_EVENT_BASE, MQTT_COM_EVENT_CONNECTED, mqtt_handler, NULL));
-    //ESP_ERROR_CHECK(esp_event_handler_register(MQTT_COM_EVENT_BASE, MQTT_COM_EVENT_DISCONNECTED, mqtt_handler, NULL));
-    //ESP_ERROR_CHECK(esp_event_handler_register(MQTT_COM_EVENT_BASE, MQTT_COM_EVENT_RECEIVED_DATA, mqtt_handler, NULL));
-
-    //SENSORES
-    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSI7021_EVENT_BASE, SENSORSI7021_TEMP_DATA, sensorSI7021_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSI7021_EVENT_BASE, SENSORSI7021_HUM_DATA, sensorSI7021_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSGP30_EVENT_BASE, SENSORSGP30_TVOC_DATA, sensorSGP30_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(SENSORSGP30_EVENT_BASE, SENSORSGP30_ECO2_DATA, sensorSGP30_event_handler, NULL));
-    
-}

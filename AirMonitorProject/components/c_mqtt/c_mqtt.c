@@ -197,7 +197,17 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
 static void mqtt_start(void){
     esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = BROKER,
+        .broker = {
+            .address.uri = BROKER,
+        },
+        .credentials = {
+            .username = "user1",
+            .set_null_client_id = true,
+            .authentication = {
+                .password = "user1",
+            }
+        }
+    
     };
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);

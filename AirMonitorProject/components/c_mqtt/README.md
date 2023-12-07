@@ -18,6 +18,15 @@ ESP_ERROR_CHECK(example_connect());
 set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
 
 
+## Authentication: username & pwd
+[Tutorial](http://www.steves-internet-guide.com/mqtt-username-password-example/)
+
+| USERNAME  |    PWD   |
+|-----------|----------|
+|   user1   |   user1  |
+
+
+
 ## Hierarchy
 **NUMPLANTA/SALA/SENSOR**
 

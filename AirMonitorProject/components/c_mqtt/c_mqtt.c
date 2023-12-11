@@ -196,8 +196,21 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 }
 
 static void mqtt_start(void){
+    char * msg = "2/3 is dead";
+
     esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = BROKER,
+        .broker = {
+            .address.uri = BROKER,
+        },
+        
+        .session = {
+            .last_will = {
+                .topic = "graveyard",
+                .msg = msg,
+                .msg_len = strlen(msg),
+            },
+            .keepalive = 10, //Para que se de cuenta en n<10s de que el nodo ha caido
+        }
     };
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);

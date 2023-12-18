@@ -10,5 +10,6 @@ enum{
 
 int mqtt_topic_parser(char *topic);
 int parse_int_data(char *data);
+char *build_topic(char *base, char* comp);
 
 #endif

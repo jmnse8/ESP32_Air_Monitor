@@ -2,6 +2,7 @@ idf_component_register(
     SRCS 
         "src/main.c"
         "src/init.c"
+        "src/context.c"
     INCLUDE_DIRS "include"
 )
 

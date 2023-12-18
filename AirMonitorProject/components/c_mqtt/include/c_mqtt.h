@@ -7,6 +7,7 @@ ESP_EVENT_DECLARE_BASE(C_MQTT_EVENT_BASE);
 
 extern int MQTT_STATUS;
 extern int MQTT_QOS;
+extern char* NODE_CONTEXT;
 
 enum{
     C_MQTT_EVENT_CONNECTED,
@@ -27,13 +28,13 @@ struct mqtt_com_data{
         - ESP_ERROR_CHECK(esp_event_loop_create_default());
         - ESP_ERROR_CHECK(example_connect());
 */
-void init_mqtt();
+void mqtt_init();
 
 /*
     If you don't want to use menuconfig to configure the mqtt broker
     Call this function before init_mqtt()
 */
-int set_broker(char *new_broker);
+int mqtt_set_broker(char *new_broker);
 
 /*
     Set qos of connection
@@ -41,16 +42,21 @@ int set_broker(char *new_broker);
         - QoS 1 = At least once
         - QoS 2 = Exactly once
 */
-int set_qos(int q);
+int mqtt_set_qos(int q);
 
+/*
+    Provide the context data to the node
+        - "floor/room"
+*/
+void mqtt_set_context(char *c);
 
 //Subscribe to topic
-int subscribe_to_topic(char* topic);
+int mqtt_subscribe_to_topic(char* topic);
 
 //Unsubscribe to topic
-int unsubscribe_to_topic(char* topic);
+int mqtt_unsubscribe_to_topic(char* topic);
 
 //Publish some data to a topic
-int publish_to_topic(char* topic, uint8_t* data);
+int mqtt_publish_to_topic(char* topic, uint8_t* data);
 
 #endif

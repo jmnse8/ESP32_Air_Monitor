@@ -3,23 +3,50 @@
 #include <regex.h>
 #include "esp_log.h"
 
-#include "c_mqtt.h"
 #include "mqtt_handler.h"
 #include "c_sensorSGP30.h"
 
 #include "mqtt_parser.h"
-
+#include "context.h"
 
 static const char* TAG = "MQTT_MANAGER";
+//char *NODE_CONTEXT_MAIN = "2/3";
+
+
+static void freq_topic_handler(char *data){
+    if (parse_int_data(data) > 0) {
+        //change_sample_period_sgp30(res);
+        ESP_LOGI(TAG, "FREQ value is %d", res);
+    } else {
+        ESP_LOGE(TAG, "FREQ value is invalid: %s", data);
+    }
+}
+
+
+static void onoff_topic_handler(char *data){
+    switch (parse_int_data(data)) {
+        case 0:
+            ESP_LOGI(TAG, "SENSOR OFF");
+            //stop_sensor_sgp30();
+            break;
+        case 1:
+            ESP_LOGI(TAG, "SENSOR ON");
+            //start_sensor_sgp30();
+            break;
+        default:
+            ESP_LOGE(TAG, "ONOFF value is invalid: %s", data);
+    }
+}
 
 void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data) {
     
     switch(id){
         case C_MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT CONNECTED");
-            subscribe_to_topic("3/2/TMP/+");
-            subscribe_to_topic("3/2/+");
-            publish_to_topic("3/2/ONOFF", (uint8_t *)"10");
+            mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
+            mqtt_subscribe_to_topic(build_topic(context_get_node_ctx(), "/+"));
+            
+            //mqtt_publish_to_topic("2/3/ONOFF", (uint8_t *)"10");
         break;
         case C_MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT DISCONNECTED");
@@ -30,28 +57,10 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
             int res;
             switch(mqtt_topic_parser(mqtt_data->topic)){
                 case MQTT_FREQ_TOPIC:
-                    res = parse_int_data(mqtt_data->data);
-                    if (res > 0) {
-                        //change_sample_period_sgp30(res);
-                        ESP_LOGI(TAG, "FREQ value is %d", res);
-                    } else {
-                        ESP_LOGE(TAG, "FREQ value is invalid: %s", mqtt_data->data);
-                    }
-                    
+                    freq_topic_handler(mqtt_data->data);
                 break;
                 case MQTT_ONOFF_TOPIC:
-                    switch (parse_int_data(mqtt_data->data)) {
-                        case 0:
-                            ESP_LOGI(TAG, "SENSOR OFF");
-                            //stop_sensor_sgp30();
-                            break;
-                        case 1:
-                            ESP_LOGI(TAG, "SENSOR ON");
-                            //start_sensor_sgp30();
-                            break;
-                        default:
-                            ESP_LOGE(TAG, "ONOFF value is invalid: %s", mqtt_data->data);
-                    }
+                    onoff_topic_handler(mqtt_data->data);
                 break;
                 case MQTT_MODE_TOPIC:
                     res = parse_int_data(mqtt_data->data);
@@ -70,4 +79,6 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
 }
 
 
-
+void mqtt_init_context_data(){
+    mqtt_set_context(context_get_node_ctx());
+}

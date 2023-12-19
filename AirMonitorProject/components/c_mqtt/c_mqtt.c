@@ -36,7 +36,6 @@ enum {
 
 int MQTT_STATUS = MQTT_SETUP;
 int MQTT_QOS;
-char *NODE_CONTEXT;
 
 
 static const char *TAG = "C_MQTT";
@@ -58,13 +57,6 @@ int mqtt_set_broker(char *new_broker){
         return 0;
     }
     return 1;
-}
-
-void mqtt_set_context(char *c){
-    if (c != NULL) {
-        NODE_CONTEXT = malloc(strlen(c) + 1); // +1 for the null terminator
-        strcpy(NODE_CONTEXT, c);
-    }
 }
 
 
@@ -205,13 +197,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-static void mqtt_start(void){
+static void mqtt_start(char *ctx){
+
+    char *lwt_msg = ctx!=NULL? ctx: "im ded";
 
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri = BROKER,
         },
-
         #ifdef CONFIG_MQTT_USE_LWT
         .session = {
             .last_will = {
@@ -220,13 +213,14 @@ static void mqtt_start(void){
                 .msg = MQTT_LWT_MESSAGE,
                 .msg_len = strlen(MQTT_LWT_MESSAGE),
                 #else
-                .msg = NODE_CONTEXT,
-                .msg_len = strlen(NODE_CONTEXT),
+                .msg = lwt_msg,
+                .msg_len = strlen(lwt_msg),
                 #endif
             },
             .keepalive = CONFIG_MQTT_LWT_KEEPALIVE,
-        }
+        },
         #endif
+        
     };
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
@@ -235,7 +229,7 @@ static void mqtt_start(void){
     esp_mqtt_client_start(mqtt_client);
 }
 
-void mqtt_init(){
+void _mqtt_init(char * ctx){
     MQTT_STATUS = MQTT_INIT;
     MQTT_QOS = 0;
     esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
@@ -257,5 +251,5 @@ void mqtt_init(){
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(example_connect());
 */
-    mqtt_start();
+    mqtt_start(ctx);
 }

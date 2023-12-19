@@ -5,6 +5,7 @@
 
 #include "mqtt_handler.h"
 #include "c_sensorSGP30.h"
+#include "c_mqtt.h"
 
 #include "mqtt_parser.h"
 #include "context.h"
@@ -14,7 +15,8 @@ static const char* TAG = "MQTT_MANAGER";
 
 
 static void freq_topic_handler(char *data){
-    if (parse_int_data(data) > 0) {
+    int res = parse_int_data(data);
+    if (res > 0) {
         //change_sample_period_sgp30(res);
         ESP_LOGI(TAG, "FREQ value is %d", res);
     } else {
@@ -79,6 +81,6 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
 }
 
 
-void mqtt_init_context_data(){
-    mqtt_set_context(context_get_node_ctx());
+void mqtt_init(){
+    _mqtt_init(context_get_node_ctx());
 }

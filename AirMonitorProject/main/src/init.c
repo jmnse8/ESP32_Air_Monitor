@@ -9,8 +9,8 @@
 #include "c_sensorSGP30.h"
 #include "c_I2C.h"
 #include "c_wifiConnection.h"
-#include "c_mqtt.h"
 #include "c_sensorSI7021.h"
+#include "c_mqtt.h"
 
 #include "mqtt_handler.h"
 #include "sensor_handler.h"
@@ -38,9 +38,8 @@ void setup(){
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     init_event_handlers();
-
     wifi_init();
-    init_mqtt();
+    mqtt_init();
 
     //init_sensor_si7021();
     //init_sensor_sgp30();

@@ -1,9 +1,51 @@
 menu "Com MQTT Configuration"
 
-    config BROKER_URL
+    config MQTT_BROKER_URL
         string "Broker URL"
         default "mqtt://test.mosquitto.org"
         help
             URL of the broker to connect to
 
+    # Define a configuration option to enable or disable MQTT LWT
+    config MQTT_USE_LWT
+        bool "Enable MQTT Last Will and Testament (LWT)"
+        default n
+        help
+            Enable this option if you want to configure MQTT with Last Will and Testament.
+
+    if MQTT_USE_LWT
+
+        # Define a configuration option to set the LWT topic
+        config MQTT_LWT_TOPIC
+            string "MQTT's Last Will Topic"
+            default "graveyard"
+            help
+                Set Last Will Topic to which publish the node's last will msg
+
+        # Define a configuration option to enable or disable MQTT LWT
+        config MQTT_USE_LWT_CUSTOM_MSG
+            bool "Use a custom (and const) msg"
+            default n
+            help
+                Enable this option if you want to configure a custom msg for your LWT.
+        
+            if MQTT_USE_LWT_CUSTOM_MSG
+                # Define a configuration option to set the LWT message
+                config MQTT_LWT_MESSAGE
+                    string "MQTT LWT Message"
+                    default "A node is down"
+                    help
+                        Set the MQTT LWT message.
+            
+            endif  # MQTT_USE_LWT_CUSTOM_MSG
+
+        config MQTT_LWT_KEEPALIVE
+            string "MQTT's LWT keepalive timeout"
+            default 10
+            help
+                Max seconds until broker realizes node is down
+
+    endif  # MQTT_USE_LWT
+
+    
 endmenu

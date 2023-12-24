@@ -22,6 +22,28 @@ static int parse_topic(char *topic){
     }
 }
 
+char *build_topic(char *base, char* comp){
+    if (base != NULL) {
+        // Calculate the length of the resulting string
+        int length = strlen(base) + strlen(comp);
+
+        // Allocate memory for the concatenated string +1 for null terminator
+        char* context_topic = (char*)malloc(length + 1); 
+
+        // Copy the original string to the new buffer
+        strcpy(context_topic, base);
+
+        // Concatenate "/+" to the string
+        strcat(context_topic, comp);
+
+        printf("%s\n", context_topic);
+
+        return context_topic;
+    }
+
+    return NULL;
+}
+
 
 /*
 int mqtt_topic_parser(char *topic){

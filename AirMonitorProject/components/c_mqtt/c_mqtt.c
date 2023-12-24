@@ -37,8 +37,9 @@ enum {
 int MQTT_STATUS = MQTT_SETUP;
 int MQTT_QOS;
 
+
 static const char *TAG = "C_MQTT";
-static char *BROKER = CONFIG_BROKER_URL;
+static char *BROKER = CONFIG_MQTT_BROKER_URL;
 
 static esp_mqtt_client_handle_t mqtt_client;
 
@@ -50,7 +51,7 @@ static void log_error_if_nonzero(const char *message, int error_code)
 }
 
 
-int set_broker(char *new_broker){
+int mqtt_set_broker(char *new_broker){
     if(MQTT_STATUS == MQTT_SETUP){
         BROKER = new_broker;
         return 0;
@@ -59,7 +60,7 @@ int set_broker(char *new_broker){
 }
 
 
-int set_qos(int q){
+int mqtt_set_qos(int q){
     if(q>-1 && q<3){
         MQTT_QOS = q;
         return 0;
@@ -67,7 +68,7 @@ int set_qos(int q){
     return 1;
 }
 
-int subscribe_to_topic(char* topic){
+int mqtt_subscribe_to_topic(char* topic){
     if(MQTT_STATUS == MQTT_CONNECTED){
        int msg_id = esp_mqtt_client_subscribe(mqtt_client, topic, MQTT_QOS);
         ESP_LOGI(TAG, "sent subscribe with msg_id=%d and qos=%d", msg_id, MQTT_QOS);
@@ -77,7 +78,7 @@ int subscribe_to_topic(char* topic){
     return 1;
 }
 
-int unsubscribe_to_topic(char* topic){
+int mqtt_unsubscribe_to_topic(char* topic){
     if(MQTT_STATUS == MQTT_CONNECTED){
         int msg_id = esp_mqtt_client_unsubscribe(mqtt_client, topic);
         ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
@@ -87,7 +88,7 @@ int unsubscribe_to_topic(char* topic){
     return 1;
 }
 
-int publish_to_topic(char* topic, uint8_t* data){
+int mqtt_publish_to_topic(char* topic, uint8_t* data){
     if(MQTT_STATUS == MQTT_CONNECTED){
         int retain = 0;
         int msg_id = esp_mqtt_client_publish(mqtt_client, topic, (const void *)data, sizeof(data), MQTT_QOS, retain);
@@ -151,6 +152,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         case MQTT_EVENT_CONNECTED:
             MQTT_STATUS = MQTT_CONNECTED;
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+            //char *context_data = (char *)event_data;
             esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_CONNECTED, NULL, 0, 0);
             break;
 
@@ -195,9 +197,30 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-static void mqtt_start(void){
+static void mqtt_start(char *ctx){
+
+    char *lwt_msg = ctx!=NULL? ctx: "im ded";
+
     esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = BROKER,
+        .broker = {
+            .address.uri = BROKER,
+        },
+        #ifdef CONFIG_MQTT_USE_LWT
+        .session = {
+            .last_will = {
+                .topic = CONFIG_MQTT_LWT_TOPIC,
+                #ifdef CONFIG_MQTT_USE_LWT_CUSTOM_MSG
+                .msg = MQTT_LWT_MESSAGE,
+                .msg_len = strlen(MQTT_LWT_MESSAGE),
+                #else
+                .msg = lwt_msg,
+                .msg_len = strlen(lwt_msg),
+                #endif
+            },
+            .keepalive = CONFIG_MQTT_LWT_KEEPALIVE,
+        },
+        #endif
+        
     };
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
@@ -206,7 +229,7 @@ static void mqtt_start(void){
     esp_mqtt_client_start(mqtt_client);
 }
 
-void init_mqtt(){
+void _mqtt_init(char * ctx){
     MQTT_STATUS = MQTT_INIT;
     MQTT_QOS = 0;
     esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
@@ -228,5 +251,5 @@ void init_mqtt(){
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(example_connect());
 */
-    mqtt_start();
+    mqtt_start(ctx);
 }

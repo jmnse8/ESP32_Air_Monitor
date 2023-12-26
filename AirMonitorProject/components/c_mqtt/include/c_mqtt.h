@@ -57,6 +57,6 @@ int mqtt_subscribe_to_topic(char* topic);
 int mqtt_unsubscribe_to_topic(char* topic);
 
 //Publish some data to a topic
-int mqtt_publish_to_topic(char* topic, uint8_t* data);
+int mqtt_publish_to_topic(char* topic, uint8_t* data, int data_length);
 
 #endif

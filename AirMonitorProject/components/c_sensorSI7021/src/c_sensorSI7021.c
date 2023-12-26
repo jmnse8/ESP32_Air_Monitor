@@ -54,11 +54,7 @@ void configure_timer_si7021(){
     };
 
     ESP_ERROR_CHECK(esp_timer_create(&sensor_timer_args, &sensor_timer));
-
     ESP_ERROR_CHECK(esp_timer_start_periodic(sensor_timer, SENSOR_FREQ*1000000));
-    ESP_LOGI(TAG, "Started timers, time since boot: %lld us", esp_timer_get_time());
-    ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(500000));
-    esp_light_sleep_start();
 }
 
 

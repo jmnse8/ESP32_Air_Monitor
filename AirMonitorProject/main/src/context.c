@@ -12,6 +12,10 @@ void context_set_node_ctx(char *c){
     }
 }
 
+int context_it_is_i(char * ctx){
+    return strncmp(NODE_CONTEXT, ctx, strlen(NODE_CONTEXT));
+}
+
 char *context_get_node_ctx(){
     return NODE_CONTEXT;
 }

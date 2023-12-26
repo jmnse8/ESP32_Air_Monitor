@@ -9,6 +9,7 @@
 
 #include "mqtt_parser.h"
 #include "context.h"
+#include "cJSON.h"
 
 static const char* TAG = "MQTT_MANAGER";
 //char *NODE_CONTEXT_MAIN = "2/3";
@@ -40,15 +41,31 @@ static void onoff_topic_handler(char *data){
     }
 }
 
+/*
+    mosquitto_pub -d -q 1 
+    -h 147.96.85.120 
+    -p 1883 
+    -t v1/devices/me/telemetry 
+    -u "XzscdzDfTPH3Xs4JGbkH" 
+    -m "{temperature:25}"
+*/
 void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data) {
     
     switch(id){
         case C_MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT CONNECTED");
-            mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
-            mqtt_subscribe_to_topic(build_topic(context_get_node_ctx(), "/+"));
-            
-            //mqtt_publish_to_topic("2/3/ONOFF", (uint8_t *)"10");
+            //mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
+            //mqtt_subscribe_to_topic(build_topic(context_get_node_ctx(), "/+"));
+
+            cJSON *root = cJSON_CreateObject();
+            cJSON_AddNumberToObject(root, "temperature", 25);
+
+            char *data = cJSON_Print(root);
+            printf("%s\n", data);
+            mqtt_publish_to_topic("v1/devices/me/telemetry", (uint8_t*)data, strlen(data));
+            free((void*)data);
+            cJSON_Delete(root);
+
         break;
         case C_MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT DISCONNECTED");
@@ -82,5 +99,6 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
 
 
 void mqtt_init(){
+    mqtt_set_qos(1);
     _mqtt_init(context_get_node_ctx());
 }

@@ -88,10 +88,10 @@ int mqtt_unsubscribe_to_topic(char* topic){
     return 1;
 }
 
-int mqtt_publish_to_topic(char* topic, uint8_t* data){
+int mqtt_publish_to_topic(char* topic, uint8_t* data, int data_length){
     if(MQTT_STATUS == MQTT_CONNECTED){
         int retain = 0;
-        int msg_id = esp_mqtt_client_publish(mqtt_client, topic, (const void *)data, sizeof(data), MQTT_QOS, retain);
+        int msg_id = esp_mqtt_client_publish(mqtt_client, topic, (const void *)data, data_length, MQTT_QOS, retain);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
         return 0;
     }
@@ -201,9 +201,24 @@ static void mqtt_start(char *ctx){
 
     char *lwt_msg = ctx!=NULL? ctx: "im ded";
 
+    /*
+    mosquitto_pub -d -q 1 
+    -h 147.96.85.120 
+    -p 1883 
+    -t v1/devices/me/telemetry 
+    -u "XzscdzDfTPH3Xs4JGbkH" "8nyHV2MCBKKqa7Mfs6sG"
+    -m "{temperature:25}"
+    */
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
-            .address.uri = BROKER,
+            .address = {
+                .uri = BROKER,
+                .port = 1883,
+            }
+        },
+        .credentials = {
+            .username = "8nyHV2MCBKKqa7Mfs6sG",
         },
         #ifdef CONFIG_MQTT_USE_LWT
         .session = {
@@ -220,8 +235,8 @@ static void mqtt_start(char *ctx){
             .keepalive = CONFIG_MQTT_LWT_KEEPALIVE,
         },
         #endif
-        
     };
+        
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
     /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */

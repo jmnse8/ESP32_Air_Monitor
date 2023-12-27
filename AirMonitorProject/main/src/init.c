@@ -41,7 +41,7 @@ void setup(){
     wifi_init();
     mqtt_init();
 
-    init_sensor_si7021();
-    //init_sensor_sgp30();
+    si7021_init_sensor();
+    sgp30_init_sensor();
 }
 

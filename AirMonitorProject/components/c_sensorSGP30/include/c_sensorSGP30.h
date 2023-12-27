@@ -14,11 +14,9 @@
 
 ESP_EVENT_DECLARE_BASE(SENSORSGP30_EVENT_BASE);
 
-enum{
-    SENSORSGP30_TVOC_MODE,
-    SENSORSGP30_ECO2_MODE,
-    SENSORSGP30_ALL_MODE,
-    SENSORSGP30_DISABLED_MODE
+enum SGP30_SENSOR_ENUM{
+    SENSORSGP30_TVOC_SENSOR = 1,
+    SENSORSGP30_ECO2_SENSOR = 2,
 };
 
 enum{
@@ -29,30 +27,40 @@ enum{
 /*
     Inicializa el sensor con su timer de muestreo
 */
-void init_sensor_sgp30(void);
-
-/*
-    Cambia el modo de muestreo del sensor:
-        SENSOR_TVOC_MODE = 0
-        SENSOR_ECO2_MODE = 1
-        SENSOR_ALL_MODE = 2
-        SENSOR_DISABLED_MODE = 3
-*/
-void set_sensor_mode_sgp30(int m);
+void sgp30_init_sensor(void);
 
 /*
     Cambia la frecuencia de muestreo en segundos
 */
-int change_sample_period_sgp30(int sec);
+int sgp30_change_sample_period(int sec);
+
+
+/**
+ * @brief Gets the status of sensorized parameters and returns a char array.
+ *
+ * This function creates a char array where each element represents the status of a sensorized parameter.
+ * The value is '1' if the corresponding sensorized parameter is active and '0' otherwise.
+ *
+ * @return A dynamically allocated char array containing '1' or '0' for each sensorized parameter status.
+ *         The caller is responsible for freeing the allocated memory.
+ */
+char* sgp30_get_mode();
 
 /*
-    Detener el sensor
+    Detener la sesorización de datos del sgp30
 */
-void stop_sensor_sgp30(void);
+void sgp30_stop_sensor(void);
 
 /*
-    Iniciar el sensor tras ejecutar stop_sensor()
+    Iniciar la sesorización de datos del sgp30
 */
-void start_sensor_sgp30(void);
+void sgp30_start_sensor(void);
+
+/**
+    @brief Detener/Iniciar la sensorización de un dato concreto del sgp30
+    @param sensor: Usa el enum SGP30_SENSOR_ENUM. Mira el .h
+    @param status: (0 off | 1 on)
+*/
+void sgp30_set_sensor_onoff(int sensor, int status);
 
 #endif

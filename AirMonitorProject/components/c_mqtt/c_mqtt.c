@@ -219,6 +219,7 @@ static void mqtt_start(char *ctx){
         },
         .credentials = {
             .username = "8nyHV2MCBKKqa7Mfs6sG",
+            //.username = "0erTLZgiRFIiCzgn1AnT",
         },
         #ifdef CONFIG_MQTT_USE_LWT
         .session = {

@@ -4,6 +4,7 @@
 #include "esp_log.h"
 
 #include "mqtt_handler.h"
+#include "sensor_handler.h"
 #include "c_sensorSGP30.h"
 #include "c_mqtt.h"
 
@@ -16,7 +17,7 @@ static const char* TAG = "MQTT_MANAGER";
 
 
 static void freq_topic_handler(char *data){
-    int res = parse_int_data(data);
+    int res = parse_int_value(data);
     if (res > 0) {
         //change_sample_period_sgp30(res);
         ESP_LOGI(TAG, "FREQ value is %d", res);
@@ -27,7 +28,7 @@ static void freq_topic_handler(char *data){
 
 
 static void onoff_topic_handler(char *data){
-    switch (parse_int_data(data)) {
+    switch (parse_bool_value(data)) {
         case 0:
             ESP_LOGI(TAG, "SENSOR OFF");
             //stop_sensor_sgp30();
@@ -40,6 +41,8 @@ static void onoff_topic_handler(char *data){
             ESP_LOGE(TAG, "ONOFF value is invalid: %s", data);
     }
 }
+
+
 
 /*
     mosquitto_pub -d -q 1 
@@ -54,17 +57,8 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
     switch(id){
         case C_MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT CONNECTED");
-            //mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
+            mqtt_subscribe_to_topic("v1/devices/me/rpc/request/+");
             //mqtt_subscribe_to_topic(build_topic(context_get_node_ctx(), "/+"));
-
-            cJSON *root = cJSON_CreateObject();
-            cJSON_AddNumberToObject(root, "temperature", 25);
-
-            char *data = cJSON_Print(root);
-            printf("%s\n", data);
-            mqtt_publish_to_topic("v1/devices/me/telemetry", (uint8_t*)data, strlen(data));
-            free((void*)data);
-            cJSON_Delete(root);
 
         break;
         case C_MQTT_EVENT_DISCONNECTED:
@@ -74,24 +68,58 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
             struct mqtt_com_data* mqtt_data = (struct mqtt_com_data*)event_data;
             ESP_LOGI(TAG, "MQTT Received data %s from topìc %s", mqtt_data->data, mqtt_data->topic);
             int res;
-            switch(mqtt_topic_parser(mqtt_data->topic)){
-                case MQTT_FREQ_TOPIC:
-                    freq_topic_handler(mqtt_data->data);
-                break;
-                case MQTT_ONOFF_TOPIC:
-                    onoff_topic_handler(mqtt_data->data);
-                break;
-                case MQTT_MODE_TOPIC:
-                    res = parse_int_data(mqtt_data->data);
-                    ESP_LOGI(TAG, "SENSOR MODE SET TO %d", res);
+            char *request_id;
+            //if(its_for_me(mqtt_data->data)==0){
+                switch(parse_method(mqtt_data->data)){
+                    case MQTT_GET_SENSOR_STAT_TOPIC:
+                        handler_get_sensor_stat(mqtt_topic_last_token(mqtt_data->topic));
+                    break;
+                    case MQTT_SET_SENSOR_STAT_TOPIC:
+                        request_id = mqtt_topic_last_token(mqtt_data->topic);
+                        handler_set_sensor_stat(mqtt_data->data, build_topic("v1/devices/me/rpc/response/", request_id));
+                        free(request_id);
 
-                    //set_sensor_mode_sgp30(res);
-                break;
+                    break;
+                    case MQTT_GET_FREQ_TOPIC:
 
-                default:
-                    ESP_LOGE(TAG, "UNKNOWN TOPIC: %s", mqtt_data->topic);
-                break;
-            }
+                    break;
+                    case MQTT_GET_ONOFF_TOPIC:
+                        request_id = mqtt_topic_last_token(mqtt_data->topic);
+                        int onoff = context_get_onoff();
+
+                        cJSON *root = cJSON_CreateObject();
+                        cJSON_AddBoolToObject(root, "onoff", onoff);
+
+                        char *data = cJSON_Print(root);
+                        mqtt_publish_to_topic(build_topic("v1/devices/me/rpc/response/", request_id), (uint8_t*)data, strlen(data));
+
+                        free((void*)data);
+                        free(request_id);
+                        cJSON_Delete(root);
+
+                    break;
+                    case MQTT_GET_MODE_TOPIC:
+                    break;
+                    case MQTT_SET_FREQ_TOPIC:
+                        freq_topic_handler(mqtt_data->data);
+                        break;
+                    case MQTT_SET_ONOFF_TOPIC:
+                        onoff_topic_handler(mqtt_data->data);
+                        
+                        break;
+                    case MQTT_SET_MODE_TOPIC:
+                        res = parse_int_data(mqtt_data->data);
+                        ESP_LOGI(TAG, "SENSOR MODE SET TO %d", res);
+                        //set_sensor_mode_sgp30(res);
+                       
+                        break;
+
+                    default:
+                        ESP_LOGE(TAG, "UNKNOWN TOPIC: %s", mqtt_data->topic);
+                    break;
+                }
+
+            //}
         break;
 
     }

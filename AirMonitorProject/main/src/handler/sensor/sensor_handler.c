@@ -5,8 +5,18 @@
 
 static const char* TAG = "SENSOR_HANDLER";
 
+enum TB_SENSOR_PIN {
+    TB_SENSOR_PIN_TMP = 1,
+    TB_SENSOR_PIN_HUM = 2,
+    TB_SENSOR_PIN_ECO2 = 3
+};
 
-char * float2str(float mfloat, int precision){
+enum TB_SENSOR_ERR {
+    TB_SENSOR_ERR_INVALID_ARGUMENT
+
+};
+
+static char * float2str(float mfloat, int precision){
 
     // Determine the length needed for the formatted string
     int length = snprintf(NULL, 0, "%.*f", precision, mfloat);
@@ -64,13 +74,56 @@ void sensorSGP30_event_handler(void* handler_args, esp_event_base_t base, int32_
     cJSON_Delete(root);
 }
 
-void handler_set_sensor_stat(char * payload){
+void handler_set_sensor_stat(char * payload, char* response_topic){
 
+    cJSON* root = cJSON_Parse(payload);
+    if (root != NULL){
+        cJSON* paramsItem = cJSON_GetObjectItem(root, "params");
 
+        if(paramsItem!=NULL){
+            cJSON* pinItem = cJSON_GetObjectItem(paramsItem, "pin");
+            cJSON *enabledItem = cJSON_GetObjectItem(paramsItem, "enabled");
 
+            int pinValue = 1;
+            int enabled = 0;
+            // Extract pin as an integer
+            if (cJSON_IsNumber(pinItem)) {
+                pinValue = pinItem->valueint;
+            }
 
+            cJSON_bool enabledValue = cJSON_CreateTrue();
+            // Extract enabled as a boolean
+            if (cJSON_IsBool(enabledItem)) {
+                enabledValue = cJSON_IsTrue(enabledItem);
+                enabled = enabledValue ? 1 : 0;
+            }
 
-    
+            switch (pinValue) {
+                case  TB_SENSOR_PIN_TMP:
+                    si7021_set_sensor_onoff(SENSORSI7021_TEMP_SENSOR, enabled);
+                break;
+                case  TB_SENSOR_PIN_HUM:
+                    si7021_set_sensor_onoff(SENSORSI7021_HUM_SENSOR, enabled);            
+                break;
+                case  TB_SENSOR_PIN_ECO2:
+                break;
+                default:
+                break;
+            }
+
+            cJSON *root = cJSON_CreateObject();
+            char str[10];
+            sprintf(str, "%d", pinValue);
+            cJSON_AddBoolToObject(root, str, enabledValue);
+
+            
+            char *data = cJSON_Print(root);
+            mqtt_publish_to_topic(response_topic, (uint8_t*)data, strlen(data));
+        }
+        
+    }
+
+    cJSON_Delete(root);    
 }
 
 void handler_get_sensor_stat(char *request_id){
@@ -107,7 +160,6 @@ void handler_get_sensor_stat(char *request_id){
     */
     
     char *data = cJSON_Print(root);
-    printf("%s\n", data);
     mqtt_publish_to_topic(build_topic("v1/devices/me/rpc/response/", request_id), (uint8_t*)data, strlen(data));
 
     free((void*)data);

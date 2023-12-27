@@ -1,18 +1,22 @@
 #ifndef __MQTT_PARSER
 #define __MQTT_PARSER
 
-enum{
+enum MQTT_TB_CMD {
     MQTT_INVALID_VALUE = -1,
     MQTT_GET_FREQ_TOPIC,
     MQTT_GET_ONOFF_TOPIC,
     MQTT_GET_MODE_TOPIC,
 
     MQTT_GET_SENSOR_STAT_TOPIC,
+    MQTT_SET_SENSOR_STAT_TOPIC,
 
     MQTT_SET_FREQ_TOPIC,
     MQTT_SET_ONOFF_TOPIC,
     MQTT_SET_MODE_TOPIC,
 };
+
+
+
 
 char *mqtt_topic_last_token(char *topic);
 int parse_int_data(char *data);

@@ -6,9 +6,14 @@ ESP_EVENT_DECLARE_BASE(SENSORSI7021_EVENT_BASE);
 
 enum{
     SENSORSI7021_DISABLED_MODE = 0,
-    SENSORSI7021_TEMP_MODE,
-    SENSORSI7021_HUM_MODE,
-    SENSORSI7021_ALL_MODE,
+    SENSORSI7021_TEMP_MODE = 1,
+    SENSORSI7021_HUM_MODE = 2,
+    SENSORSI7021_ALL_MODE = 3,
+};
+
+enum {
+    SENSORSI7021_TEMP_SENSOR = 1,
+    SENSORSI7021_HUM_SENSOR = 2,
 };
 
 enum{
@@ -46,5 +51,8 @@ void stop_sensor_si7021(void);
     Iniciar el sensor tras ejecutar stop_sensor()
 */
 void start_sensor_si7021(void);
+
+
+void si7021_set_sensor_onoff(int sensor, int status);
 
 #endif

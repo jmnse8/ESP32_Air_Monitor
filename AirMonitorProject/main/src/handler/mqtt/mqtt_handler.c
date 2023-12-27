@@ -68,23 +68,29 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
             struct mqtt_com_data* mqtt_data = (struct mqtt_com_data*)event_data;
             ESP_LOGI(TAG, "MQTT Received data %s from topìc %s", mqtt_data->data, mqtt_data->topic);
             int res;
+            char *request_id;
             //if(its_for_me(mqtt_data->data)==0){
                 switch(parse_method(mqtt_data->data)){
                     case MQTT_GET_SENSOR_STAT_TOPIC:
                         handler_get_sensor_stat(mqtt_topic_last_token(mqtt_data->topic));
                     break;
+                    case MQTT_SET_SENSOR_STAT_TOPIC:
+                        request_id = mqtt_topic_last_token(mqtt_data->topic);
+                        handler_set_sensor_stat(mqtt_data->data, build_topic("v1/devices/me/rpc/response/", request_id));
+                        free(request_id);
+
+                    break;
                     case MQTT_GET_FREQ_TOPIC:
-                    
+
                     break;
                     case MQTT_GET_ONOFF_TOPIC:
-                        char * request_id = mqtt_topic_last_token(mqtt_data->topic);
+                        request_id = mqtt_topic_last_token(mqtt_data->topic);
                         int onoff = context_get_onoff();
 
                         cJSON *root = cJSON_CreateObject();
                         cJSON_AddBoolToObject(root, "onoff", onoff);
 
                         char *data = cJSON_Print(root);
-                        printf("%s\n", data);
                         mqtt_publish_to_topic(build_topic("v1/devices/me/rpc/response/", request_id), (uint8_t*)data, strlen(data));
 
                         free((void*)data);
@@ -112,6 +118,7 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
                         ESP_LOGE(TAG, "UNKNOWN TOPIC: %s", mqtt_data->topic);
                     break;
                 }
+
             //}
         break;
 

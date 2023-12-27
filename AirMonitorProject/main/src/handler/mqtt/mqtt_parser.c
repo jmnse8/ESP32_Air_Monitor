@@ -18,7 +18,6 @@ int its_for_me(const char *payload){
         if(deviceItem!=NULL){
             char deviceID[20];
             snprintf(deviceID, sizeof(deviceID), "%s", deviceItem->valuestring);
-            printf("ist me? %s\n", context_it_is_i(deviceID)==0?"yep":"nope");
             res = 0;
         }
     }
@@ -70,6 +69,9 @@ static int parse_topic(char *topic){
     else if (strcmp(topic, "MODE") == 0){
         return MQTT_SET_MODE_TOPIC;
     }
+    else if (strcmp(topic, "SEN_STAT") == 0) {
+        return MQTT_SET_SENSOR_STAT_TOPIC;
+    }
     else if (strcmp(topic, "G_FREQ") == 0) {
         return MQTT_GET_FREQ_TOPIC;
     } 
@@ -118,9 +120,7 @@ char *build_topic(char *base, char* comp){
 
         // Concatenate "/+" to the string
         strcat(context_topic, comp);
-
-        printf("%s\n", context_topic);
-
+        
         return context_topic;
     }
 

@@ -62,13 +62,22 @@ int parse_int_value(const char *payload){
 static int parse_topic(char *topic){
 
     if (strcmp(topic, "FREQ") == 0) {
-        return MQTT_FREQ_TOPIC;
+        return MQTT_SET_FREQ_TOPIC;
     } 
     else if (strcmp(topic, "ONOFF") == 0){
-        return MQTT_ONOFF_TOPIC;
+        return MQTT_SET_ONOFF_TOPIC;
     }
     else if (strcmp(topic, "MODE") == 0){
-        return MQTT_MODE_TOPIC;
+        return MQTT_SET_MODE_TOPIC;
+    }
+    else if (strcmp(topic, "G_FREQ") == 0) {
+        return MQTT_GET_FREQ_TOPIC;
+    } 
+    else if (strcmp(topic, "G_ONOFF") == 0) {
+        return MQTT_GET_ONOFF_TOPIC;
+    } 
+    else if (strcmp(topic, "G_MODE") == 0) {
+        return MQTT_GET_MODE_TOPIC;
     }
     else{
         return MQTT_INVALID_VALUE;
@@ -117,11 +126,21 @@ char *build_topic(char *base, char* comp){
 
 
 
-int mqtt_topic_parser(char *topic){
+char *mqtt_topic_last_token(char *topic){
 
-    char *last_token = strrchr(topic, '/') + 1;
+    char *last_topic = strrchr(topic, '/') + 1;
 
-    return parse_topic(last_token);
+    if(last_topic!=NULL){
+        int token_length = strlen(last_topic);
+        char *last_token = (char *)malloc(token_length + 1); // +1 for the null terminator
+        if (last_token != NULL) {
+            strncpy(last_token, last_topic, token_length);
+            last_token[token_length] = '\0'; // Ensure null termination
+            return last_token;
+        }
+    }
+    
+    return NULL;
 }
 
 

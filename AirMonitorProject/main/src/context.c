@@ -4,6 +4,7 @@
 #include "context.h"
 
 static char *NODE_CONTEXT = "2/3";
+static int NODE_ONOFF_STATUS = CONTEXT_ON;
 
 void context_set_node_ctx(char *c){
     if (c != NULL) {
@@ -12,10 +13,20 @@ void context_set_node_ctx(char *c){
     }
 }
 
+char *context_get_node_ctx(){
+    return NODE_CONTEXT;
+}
+
 int context_it_is_i(char * ctx){
     return strncmp(NODE_CONTEXT, ctx, strlen(NODE_CONTEXT));
 }
 
-char *context_get_node_ctx(){
-    return NODE_CONTEXT;
+int context_get_onoff(){
+    return NODE_ONOFF_STATUS;
 }
+
+void context_set_onoff(int onoff){
+    NODE_ONOFF_STATUS = onoff;
+}
+
+

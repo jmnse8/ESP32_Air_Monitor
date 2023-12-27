@@ -4,6 +4,7 @@
 #include "esp_log.h"
 
 #include "mqtt_handler.h"
+#include "sensor_handler.h"
 #include "c_sensorSGP30.h"
 #include "c_mqtt.h"
 
@@ -41,6 +42,8 @@ static void onoff_topic_handler(char *data){
     }
 }
 
+
+
 /*
     mosquitto_pub -d -q 1 
     -h 147.96.85.120 
@@ -67,14 +70,18 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
             int res;
             //if(its_for_me(mqtt_data->data)==0){
                 switch(parse_method(mqtt_data->data)){
+                    case MQTT_GET_SENSOR_STAT_TOPIC:
+                        handler_get_sensor_stat(mqtt_topic_last_token(mqtt_data->topic));
+                    break;
                     case MQTT_GET_FREQ_TOPIC:
+                    
                     break;
                     case MQTT_GET_ONOFF_TOPIC:
                         char * request_id = mqtt_topic_last_token(mqtt_data->topic);
                         int onoff = context_get_onoff();
 
                         cJSON *root = cJSON_CreateObject();
-                        cJSON_AddBoolToObject(root, "onoff", cJSON_CreateBool(onoff));
+                        cJSON_AddBoolToObject(root, "onoff", onoff);
 
                         char *data = cJSON_Print(root);
                         printf("%s\n", data);

@@ -47,6 +47,10 @@ void set_sensor_mode_si7021(int m){
     }
 }
 
+int get_sensor_mode_si7021(){
+    return SENSOR_MODE;
+}
+
 void configure_timer_si7021(){
     const esp_timer_create_args_t sensor_timer_args = {
             .callback = &sensor_timer_callback_si7021,
@@ -84,7 +88,7 @@ void init_sensor_si7021(void){
     //ESP_LOGI(TAG, "TEMP: %i",  I2C_MASTER_FREQ_HZ);
        
     //i2c_master_driver_initialize(i2c_num, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, I2C_MASTER_FREQ_HZ, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE);
-    SENSOR_MODE = SENSORSI7021_ALL_MODE;
+    SENSOR_MODE = SENSORSI7021_TEMP_MODE;
     configure_timer_si7021();
 }
 

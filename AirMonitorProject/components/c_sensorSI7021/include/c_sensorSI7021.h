@@ -5,10 +5,10 @@
 ESP_EVENT_DECLARE_BASE(SENSORSI7021_EVENT_BASE);
 
 enum{
+    SENSORSI7021_DISABLED_MODE = 0,
     SENSORSI7021_TEMP_MODE,
     SENSORSI7021_HUM_MODE,
     SENSORSI7021_ALL_MODE,
-    SENSORSI7021_DISABLED_MODE
 };
 
 enum{
@@ -20,6 +20,8 @@ enum{
     Inicializa el sensor con su timer de muestreo
 */
 void init_sensor_si7021(void);
+
+int get_sensor_mode_si7021();
 
 /*
     Cambia el modo de muestreo del sensor:

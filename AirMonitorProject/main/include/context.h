@@ -2,8 +2,8 @@
 #define __CONTEXT_H
 
 enum {
-    CONTEXT_ON,
-    CONTEXT_OFF
+    CONTEXT_OFF = 0,
+    CONTEXT_ON = 1
 };
 
 /*

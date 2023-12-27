@@ -79,6 +79,9 @@ static int parse_topic(char *topic){
     else if (strcmp(topic, "G_MODE") == 0) {
         return MQTT_GET_MODE_TOPIC;
     }
+    else if (strcmp(topic, "G_SEN_STAT") == 0) {
+        return MQTT_GET_SENSOR_STAT_TOPIC;
+    }
     else{
         return MQTT_INVALID_VALUE;
     }

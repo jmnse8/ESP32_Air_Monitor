@@ -8,7 +8,8 @@ static const char* TAG = "SENSOR_HANDLER";
 enum TB_SENSOR_PIN {
     TB_SENSOR_PIN_TMP = 1,
     TB_SENSOR_PIN_HUM = 2,
-    TB_SENSOR_PIN_ECO2 = 3
+    TB_SENSOR_PIN_ECO2 = 3,
+    TB_SENSOR_PIN_TVOC = 4,
 };
 
 enum TB_SENSOR_ERR {
@@ -105,7 +106,11 @@ void handler_set_sensor_stat(char * payload, char* response_topic){
                 case  TB_SENSOR_PIN_HUM:
                     si7021_set_sensor_onoff(SENSORSI7021_HUM_SENSOR, enabled);            
                 break;
-                case  TB_SENSOR_PIN_ECO2:
+                case TB_SENSOR_PIN_ECO2:
+                    sgp30_set_sensor_onoff(SENSORSGP30_ECO2_SENSOR, enabled);            
+                break;
+                case TB_SENSOR_PIN_TVOC:
+                    sgp30_set_sensor_onoff(SENSORSGP30_TVOC_SENSOR, enabled);            
                 break;
                 default:
                 break;
@@ -128,36 +133,18 @@ void handler_set_sensor_stat(char * payload, char* response_topic){
 
 void handler_get_sensor_stat(char *request_id){
 
-    int mode = get_sensor_mode_si7021();
-
+    char *si7021_mode = si7021_get_mode();
+    char *sgp30_mode = sgp30_get_mode();
+    char status[5] = {si7021_mode[0], si7021_mode[1], sgp30_mode[0], sgp30_mode[1]};
+    
     cJSON *root = cJSON_CreateObject();
-
-    int status[4] = {0,0,0,0};
-
-    switch(mode){
-        case SENSORSI7021_TEMP_MODE:
-            status[0] = 1;
-        break;
-        case SENSORSI7021_HUM_MODE:
-            status[1] = 1;
-        break;
-        case SENSORSI7021_ALL_MODE:
-            status[0] = 1;
-            status[1] = 1;
-        break;
-    }
-
-    printf("%d %d %d %d\n", status[0], status[1], status[2], status[3]);
     cJSON_AddBoolToObject(root, "1", status[0]);
     cJSON_AddBoolToObject(root, "2", status[1]);
     cJSON_AddBoolToObject(root, "3", status[2]);
-    
-    /*
-    SENSORSI7021_DISABLED_MODE = 0
-    SENSORSI7021_TEMP_MODE,
-    SENSORSI7021_HUM_MODE,
-    SENSORSI7021_ALL_MODE,
-    */
+    cJSON_AddBoolToObject(root, "4", status[3]);
+
+    free(si7021_mode);
+    free(sgp30_mode);
     
     char *data = cJSON_Print(root);
     mqtt_publish_to_topic(build_topic("v1/devices/me/rpc/response/", request_id), (uint8_t*)data, strlen(data));

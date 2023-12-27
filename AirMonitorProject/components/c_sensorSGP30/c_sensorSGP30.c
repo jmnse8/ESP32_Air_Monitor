@@ -66,11 +66,11 @@ char* sgp30_get_mode(){
     char* status = (char*)malloc(SENSOR_N_PARAMS * sizeof(char));
 
     if(status!=NULL){
-        status[0] = esp_timer_is_active(eco2_sensor_timer)? "1":"0";
-        status[1] = esp_timer_is_active(tvoc_sensor_timer)? "1":"0";
+        status[0] = esp_timer_is_active(eco2_sensor_timer)? '1':'0';
+        status[1] = esp_timer_is_active(tvoc_sensor_timer)? '1':'0';
+        return status;
     }
-    
-    return status;
+    return NULL;    
 }
 
 void sgp30_set_sensor_onoff(int sensor, int status){

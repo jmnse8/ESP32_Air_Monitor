@@ -84,11 +84,11 @@ char* si7021_get_mode(){
     char* status = (char*)malloc(SENSOR_N_PARAMS * sizeof(char));
 
     if(status!=NULL){
-        status[0] = esp_timer_is_active(tmp_sensor_timer)? "1":"0";
-        status[1] = esp_timer_is_active(hum_sensor_timer)? "1":"0";
+        status[0] = esp_timer_is_active(tmp_sensor_timer)? '1':'0';
+        status[1] = esp_timer_is_active(hum_sensor_timer)? '1':'0';
+        return status;
     }
-    
-    return status;
+    return NULL;
 }
 
 static void _configure_timer(esp_timer_handle_t* timer, char *name){

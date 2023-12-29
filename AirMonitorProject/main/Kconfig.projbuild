@@ -4,6 +4,12 @@ menu "Com Thingsboard Configuration"
         string "Thingsboard Telemetry Topic"
         default "v1/devices/me/telemetry"
         help
-            Topic to publish/subscribe to in order to communicate with TB
+            Topic to publish/subscribe to in order to send telemetry to TB
+
+    config TB_ATTRIBUTES_TOPIC
+        string "Thingsboard Attributes Topic"
+        default "v1/devices/me/attributes"
+        help
+            Topic to publish/subscribe to in order to send attributes with TB
 
 endmenu

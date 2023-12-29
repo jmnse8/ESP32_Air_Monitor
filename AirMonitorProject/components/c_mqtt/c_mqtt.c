@@ -176,8 +176,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            //printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-            //printf("DATA=%.*s\r\n", event->data_len, event->data);
             handle_received_data((const char*)event->topic, event->topic_len, (const char*)event->data, event->data_len);
             break;
 

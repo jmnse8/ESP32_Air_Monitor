@@ -11,6 +11,8 @@
 #include "c_wifiConnection.h"
 #include "c_sensorSI7021.h"
 #include "c_mqtt.h"
+#include "c_sntp.h"
+
 
 #include "mqtt_handler.h"
 #include "sensor_handler.h"
@@ -41,6 +43,7 @@ void setup(){
     wifi_init();
     mqtt_init();
 
+    sntp_sync_time_init();
     init_sensor_si7021();
     //init_sensor_sgp30();
 }

@@ -1,8 +1,15 @@
 #include "c_sntp.h"
 
+static const char *TAG = "Configuracion_Hora";
+
 static void obtain_time(void);
 
-void sntp_sync_time(void)
+void time_sync_notification_cb(struct timeval *tv)
+{
+    ESP_LOGI(TAG, "Notification of a time synchronization event");
+}
+
+void sntp_sync_time_init(void)
 {
      time_t now;
     struct tm timeinfo;
@@ -28,7 +35,7 @@ static void obtain_time(void)
 {
     ESP_LOGI(TAG, "Initializing and starting SNTP");
 
-    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG(CONFIG_SNTP_TIME_SERVER);
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("0.europe.pool.ntp.org");//"pool.ntp.org");
 
     config.sync_cb = time_sync_notification_cb;     // Note: This is only needed if we want
 

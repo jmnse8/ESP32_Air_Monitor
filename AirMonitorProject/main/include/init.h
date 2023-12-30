@@ -10,5 +10,13 @@
 #include "c_mqtt.h"
 */
 
+enum WIFI_STATE  {
+    WIFI_STATE_NO_PROV,
+    WIFI_STATE_DISCONN,
+    WIFI_STATE_CONN,
+};
+
+
+
 void setup();
-//void init_event_handlers();
+

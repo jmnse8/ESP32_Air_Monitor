@@ -12,8 +12,11 @@
 #include "context.h"
 #include "cJSON.h"
 
-static const char* TAG = "MQTT_MANAGER";
+static const char* TAG = "MQTT_HANDLER";
 //char *NODE_CONTEXT_MAIN = "2/3";
+
+static const char* PROVISION_REQUEST_TOPIC = "/provision/request";
+static const char* PROVISION_RESPONSE_TOPIC = "/provision/response";
 
 
 static void freq_topic_handler(char *data){
@@ -43,6 +46,51 @@ static void onoff_topic_handler(char *data){
 }
 
 
+static void _signup2tb(){
+    mqtt_subscribe_to_topic(PROVISION_RESPONSE_TOPIC);
+    char * request = build_TB_prov_request();
+
+    int res = mqtt_publish_to_topic(PROVISION_REQUEST_TOPIC, (uint8_t*)request, strlen(request));
+    free(request);
+}
+
+static void _start_with_tb_token(char *token){
+    mqtt_stop_client();
+    mqtt_set_qos(1);
+    mqtt_set_username(token);
+    mqtt_start_client();
+    context_refresh_node_status(NODE_STATE_REGULAR);
+}
+
+
+static void _get_access_token_TB(char *payload){
+    char * token = get_access_token_TB_response(payload);
+
+    if(token!=NULL){
+        context_set_node_tb_token(token);
+        _start_with_tb_token(token);
+        free(token);
+    }
+}
+
+static void _on_connected(){
+    switch (context_get_node_status()) {
+        case NODE_STATE_HAS_TB_TOKEN:
+            _start_with_tb_token(context_get_node_tb_token());
+            break;
+        case NODE_STATE_SIGUP_DEVICE2TB_STATE:
+            _signup2tb();
+            break;
+        case NODE_STATE_REGULAR:
+
+            ESP_LOGI(TAG, "_on_connected ALL GUD");
+            break;
+        default:
+            ESP_LOGI(TAG, "EH?");
+            break;
+    }
+}
+
 
 /*
     mosquitto_pub -d -q 1 
@@ -57,8 +105,9 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
     switch(id){
         case C_MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT CONNECTED");
-            mqtt_subscribe_to_topic("v1/devices/me/rpc/request/+");
-            //mqtt_subscribe_to_topic(build_topic(context_get_node_ctx(), "/+"));
+            //mqtt_subscribe_to_topic("v1/devices/me/rpc/request/+");
+
+            _on_connected();
 
         break;
         case C_MQTT_EVENT_DISCONNECTED:
@@ -69,57 +118,61 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
             ESP_LOGI(TAG, "MQTT Received data %s from topìc %s", mqtt_data->data, mqtt_data->topic);
             int res;
             char *request_id;
-            //if(its_for_me(mqtt_data->data)==0){
-                switch(parse_method(mqtt_data->data)){
-                    case MQTT_GET_SENSOR_STAT_TOPIC:
-                        handler_get_sensor_stat(mqtt_topic_last_token(mqtt_data->topic));
+            switch(parse_method(mqtt_data->data)){
+                case MQTT_GET_SENSOR_STAT_TOPIC:
+                    handler_get_sensor_stat(mqtt_topic_last_token(mqtt_data->topic));
+                break;
+                case MQTT_SET_SENSOR_STAT_TOPIC:
+                    request_id = mqtt_topic_last_token(mqtt_data->topic);
+                    handler_set_sensor_stat(mqtt_data->data, build_topic(CONFIG_TB_RESPONSE_TOPIC, request_id));
+                    free(request_id);
+
+                break;
+                case MQTT_GET_FREQ_TOPIC:
+
+                break;
+                case MQTT_GET_ONOFF_TOPIC:
+                    request_id = mqtt_topic_last_token(mqtt_data->topic);
+                    int onoff = context_get_onoff();
+
+                    cJSON *root = cJSON_CreateObject();
+                    cJSON_AddBoolToObject(root, "onoff", onoff);
+
+                    char *data = cJSON_Print(root);
+                    mqtt_publish_to_topic(build_topic(CONFIG_TB_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
+
+                    free((void*)data);
+                    free(request_id);
+                    cJSON_Delete(root);
+
+                break;
+                case MQTT_GET_MODE_TOPIC:
+                break;
+                case MQTT_SET_FREQ_TOPIC:
+                    freq_topic_handler(mqtt_data->data);
                     break;
-                    case MQTT_SET_SENSOR_STAT_TOPIC:
-                        request_id = mqtt_topic_last_token(mqtt_data->topic);
-                        handler_set_sensor_stat(mqtt_data->data, build_topic("v1/devices/me/rpc/response/", request_id));
-                        free(request_id);
-
+                case MQTT_SET_ONOFF_TOPIC:
+                    onoff_topic_handler(mqtt_data->data);
+                    
                     break;
-                    case MQTT_GET_FREQ_TOPIC:
-
+                case MQTT_SET_MODE_TOPIC:
+                    res = parse_int_data(mqtt_data->data);
+                    ESP_LOGI(TAG, "SENSOR MODE SET TO %d", res);
+                    //set_sensor_mode_sgp30(res);
+                    
                     break;
-                    case MQTT_GET_ONOFF_TOPIC:
-                        request_id = mqtt_topic_last_token(mqtt_data->topic);
-                        int onoff = context_get_onoff();
 
-                        cJSON *root = cJSON_CreateObject();
-                        cJSON_AddBoolToObject(root, "onoff", onoff);
-
-                        char *data = cJSON_Print(root);
-                        mqtt_publish_to_topic(build_topic("v1/devices/me/rpc/response/", request_id), (uint8_t*)data, strlen(data));
-
-                        free((void*)data);
-                        free(request_id);
-                        cJSON_Delete(root);
-
+                case MQTT_SET_PROV_TOKEN:
+                    _get_access_token_TB(mqtt_data->data);
                     break;
-                    case MQTT_GET_MODE_TOPIC:
-                    break;
-                    case MQTT_SET_FREQ_TOPIC:
-                        freq_topic_handler(mqtt_data->data);
-                        break;
-                    case MQTT_SET_ONOFF_TOPIC:
-                        onoff_topic_handler(mqtt_data->data);
-                        
-                        break;
-                    case MQTT_SET_MODE_TOPIC:
-                        res = parse_int_data(mqtt_data->data);
-                        ESP_LOGI(TAG, "SENSOR MODE SET TO %d", res);
-                        //set_sensor_mode_sgp30(res);
-                       
-                        break;
 
-                    default:
-                        ESP_LOGE(TAG, "UNKNOWN TOPIC: %s", mqtt_data->topic);
-                    break;
-                }
+                default:
+                    ESP_LOGE(TAG, "UNKNOWN TOPIC: %s", mqtt_data->topic);
+                break;
+            }
 
-            //}
+
+
         break;
 
     }
@@ -128,5 +181,6 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
 
 void mqtt_init(){
     mqtt_set_qos(1);
-    _mqtt_init(context_get_node_ctx());
+    //context_get_node_ctx()
+    mqtt_start_client();
 }

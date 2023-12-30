@@ -1,5 +1,4 @@
 # Component MQTT
-Lo he llamado mqtt_com(ponent) para que el nombre coincida con otra librería parecida
 
 ## TO USE THIS COMPONENT, ADD IN YOUR MAIN:
 ```
@@ -34,11 +33,13 @@ set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_exam
 
 - SENSOR: string
 
-    - TMP: Temperatura
+    - TEMP: Temperatura
 
     - HUM: Humedad
 
-    - QOA: Calidad de aire
+    - ECO2: Calidad de aire CO2
+
+    - TVOC: Calidad de aire VOC
 
 
 ## CONTROL  

@@ -35,11 +35,14 @@ enum {
 };
 
 int MQTT_STATUS = MQTT_SETUP;
-int MQTT_QOS;
+int MQTT_QOS = 0;
+char *MQTT_USERNAME = NULL;
+char *MQTT_LWT_MESSAGE = "ME MORI xdxd";
+int MQTT_PORT = 1883;
 
 
 static const char *TAG = "C_MQTT";
-static char *BROKER = CONFIG_MQTT_BROKER_URL;
+static char *MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
 
 static esp_mqtt_client_handle_t mqtt_client;
 
@@ -51,18 +54,60 @@ static void log_error_if_nonzero(const char *message, int error_code)
 }
 
 
-int mqtt_set_broker(char *new_broker){
+int mqtt_set_port(int port){
     if(MQTT_STATUS == MQTT_SETUP){
-        BROKER = new_broker;
+        MQTT_PORT = port;
+        return 0;
+    }
+    return 1;
+}
+
+int mqtt_set_username(char *username){
+    if(MQTT_STATUS == MQTT_SETUP){
+        if(MQTT_USERNAME!=NULL)
+            free(MQTT_USERNAME);
+
+        int len = strlen(username);
+        MQTT_USERNAME = malloc(len + 1);
+
+        if (MQTT_USERNAME != NULL) {
+            strncpy(MQTT_USERNAME, username, len);
+            MQTT_USERNAME[len] = '\0'; 
+            return 0;
+        } 
+    }
+    return 1;
+}
+
+int mqtt_set_lwt_msg(char *msg){
+    if(MQTT_STATUS == MQTT_SETUP){
+        if(MQTT_LWT_MESSAGE!=NULL)
+            free(MQTT_LWT_MESSAGE);
+
+        int len = strlen(msg);
+        MQTT_LWT_MESSAGE = malloc(len + 1);
+
+        if (MQTT_LWT_MESSAGE != NULL) {
+            strncpy(MQTT_LWT_MESSAGE, msg, len);
+            MQTT_LWT_MESSAGE[len] = '\0'; 
+            return 0;
+        } 
+    }
+    return 1;
+}
+
+int mqtt_set_broker(char *broker){
+    if(MQTT_STATUS == MQTT_SETUP){
+        MQTT_BROKER = broker;
         return 0;
     }
     return 1;
 }
 
 
-int mqtt_set_qos(int q){
-    if(q>-1 && q<3){
-        MQTT_QOS = q;
+int mqtt_set_qos(int qos){
+    if(qos>-1 && qos<3){
+        MQTT_QOS = qos;
         return 0;
     }
     return 1;
@@ -134,7 +179,7 @@ static void handle_received_data(const char* topic, int topic_len, const char* d
     esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, mqtt_data, sizeof(struct mqtt_com_data), 0);
 }
 
-/*
+/**
  * @brief Event handler registered to receive MQTT events
  *
  *  This function is called by the MQTT client event loop.
@@ -176,8 +221,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            //printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-            //printf("DATA=%.*s\r\n", event->data_len, event->data);
             handle_received_data((const char*)event->topic, event->topic_len, (const char*)event->data, event->data_len);
             break;
 
@@ -197,28 +240,18 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-static void mqtt_start(char *ctx){
-
-    char *lwt_msg = ctx!=NULL? ctx: "im ded";
-
-    /*
-    mosquitto_pub -d -q 1 
-    -h 147.96.85.120 
-    -p 1883 
-    -t v1/devices/me/telemetry 
-    -u "XzscdzDfTPH3Xs4JGbkH" "8nyHV2MCBKKqa7Mfs6sG"
-    -m "{temperature:25}"
-    */
+static void mqtt_start(){
 
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address = {
-                .uri = BROKER,
-                .port = 1883,
+                .uri = MQTT_BROKER,
+                .port = MQTT_PORT,
             }
         },
         .credentials = {
-            .username = "8nyHV2MCBKKqa7Mfs6sG",
+            .username = "provision",
+            //.username = "8nyHV2MCBKKqa7Mfs6sG",
             //.username = "0erTLZgiRFIiCzgn1AnT",
         },
         #ifdef CONFIG_MQTT_USE_LWT
@@ -226,17 +259,21 @@ static void mqtt_start(char *ctx){
             .last_will = {
                 .topic = CONFIG_MQTT_LWT_TOPIC,
                 #ifdef CONFIG_MQTT_USE_LWT_CUSTOM_MSG
+                .msg = CONFIG_MQTT_LWT_MESSAGE,
+                .msg_len = strlen(CONFIG_MQTT_LWT_MESSAGE),
+                #else
                 .msg = MQTT_LWT_MESSAGE,
                 .msg_len = strlen(MQTT_LWT_MESSAGE),
-                #else
-                .msg = lwt_msg,
-                .msg_len = strlen(lwt_msg),
                 #endif
             },
             .keepalive = CONFIG_MQTT_LWT_KEEPALIVE,
         },
         #endif
     };
+
+    if(MQTT_USERNAME!=NULL){
+        mqtt_cfg.credentials.username = MQTT_USERNAME;
+    }
         
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
@@ -245,27 +282,27 @@ static void mqtt_start(char *ctx){
     esp_mqtt_client_start(mqtt_client);
 }
 
-void _mqtt_init(char * ctx){
-    MQTT_STATUS = MQTT_INIT;
-    MQTT_QOS = 0;
-    esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
-    esp_log_level_set("transport", ESP_LOG_DEBUG);
-    esp_log_level_set("mqtt_client", ESP_LOG_DEBUG);
 
-/*
-    esp_log_level_set("*", ESP_LOG_INFO);
-    esp_log_level_set("mqtt_client", ESP_LOG_VERBOSE);
-    esp_log_level_set("MQTT_EXAMPLE", ESP_LOG_VERBOSE);
-    esp_log_level_set("TRANSPORT_BASE", ESP_LOG_VERBOSE);
-    esp_log_level_set("esp-tls", ESP_LOG_VERBOSE);
-    esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
-    esp_log_level_set("outbox", ESP_LOG_VERBOSE);
+void mqtt_stop_client(){
+    if (mqtt_client != NULL) {
+        esp_mqtt_client_stop(mqtt_client);
+        mqtt_client = NULL; // Set to NULL to avoid using a stopped client
 
+        MQTT_STATUS = MQTT_SETUP;
+        MQTT_QOS = 0;
+        MQTT_USERNAME = NULL;
+        MQTT_PORT = 1883;
+    }
+}
 
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(example_connect());
-*/
-    mqtt_start(ctx);
+void mqtt_start_client(){
+    if(MQTT_STATUS == MQTT_SETUP){
+        MQTT_STATUS = MQTT_INIT;
+        /*
+        esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
+        esp_log_level_set("transport", ESP_LOG_DEBUG);
+        esp_log_level_set("mqtt_client", ESP_LOG_DEBUG);
+        */
+        mqtt_start();
+    }
 }

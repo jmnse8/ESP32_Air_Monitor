@@ -7,6 +7,10 @@ ESP_EVENT_DECLARE_BASE(C_MQTT_EVENT_BASE);
 
 extern int MQTT_STATUS;
 extern int MQTT_QOS;
+extern int MQTT_PORT;
+extern char* MQTT_USERNAME;
+extern char *MQTT_LWT_MESSAGE;
+
 extern char* NODE_CONTEXT;
 
 enum{
@@ -28,25 +32,42 @@ struct mqtt_com_data{
         - ESP_ERROR_CHECK(esp_event_loop_create_default());
         - ESP_ERROR_CHECK(example_connect());
 */
-void _mqtt_init(char * ctx);
+void mqtt_start_client();
 
-/*
-    If you don't want to use menuconfig to configure the mqtt broker
-    Call this function before init_mqtt()
+void mqtt_stop_client();
+
+/**
+ * @brief Set MQTT Last Will Testament Message
 */
-int mqtt_set_broker(char *new_broker);
+int mqtt_set_lwt_msg(char *msg);
 
-/*
-    Set qos of connection
-        - QoS 0 = At most once (default)
-        - QoS 1 = At least once
-        - QoS 2 = Exactly once
+/**
+ * @brief Set MQTT port. 
+ * Call this function before init_mqtt()
 */
-int mqtt_set_qos(int q);
+int mqtt_set_port(int port);
 
-/*
-    Provide the context data to the node
-        - "floor/room"
+/**
+ * @brief Set MQTT username. 
+ * Call this function before init_mqtt()
+*/
+int mqtt_set_username(char *username);
+
+/**
+ * @brief If you don't want to use menuconfig to configure the mqtt broker. 
+ * Call this function before init_mqtt()
+*/
+int mqtt_set_broker(char *broker);
+
+/**
+ * @brief Set MQTT Quality of Service
+ * @param
+ *  qos: QoS 0 = At most once (default), QoS 1 = At least once, QoS 2 = Exactly once
+*/   
+int mqtt_set_qos(int qos);
+
+/**
+ * @brief Provide the context data to the node --> "floor/room"
 */
 void mqtt_set_context(char *c);
 

@@ -144,8 +144,6 @@ void handler_get_sensor_stat(char *request_id){
     char *sgp30_mode = sgp30_get_mode();
     char status[4] = {si7021_mode[0], si7021_mode[1], sgp30_mode[0], sgp30_mode[1]};
 
-    printf("status = %c%c%c%c\n", status[0], status[1], status[2], status[3]);
-    
     cJSON *root = cJSON_CreateObject();
     cJSON_AddBoolToObject(root, "1", char2bool(status[0]));
     cJSON_AddBoolToObject(root, "2", char2bool(status[1]));
@@ -153,8 +151,7 @@ void handler_get_sensor_stat(char *request_id){
     cJSON_AddBoolToObject(root, "4", char2bool(status[3]));
     
     char *data = cJSON_Print(root);
-    printf("%s\n", data);
-    mqtt_publish_to_topic(build_topic("v1/devices/me/rpc/response/", request_id), (uint8_t*)data, strlen(data));
+    mqtt_publish_to_topic(build_topic(CONFIG_TB_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
 
     free((void*)data);
     free(si7021_mode);

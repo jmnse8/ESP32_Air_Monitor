@@ -6,6 +6,20 @@ enum {
     CONTEXT_ON = 1
 };
 
+enum NODE_STATE{
+    NODE_STATE_BLANK,                   //Factory reset (no provisioning) 
+    NODE_STATE_PROV_WIFI,               //Provisioning wifi
+
+    NODE_STATE_SIGUP_DEVICE2TB_STATE,   //Signing tp to TB
+
+    NODE_STATE_REGULAR                  //Wifi + Registered in TB
+
+};
+
+extern int NODE_STATUS;
+
+
+
 /*
     Set node floor/room context
 */

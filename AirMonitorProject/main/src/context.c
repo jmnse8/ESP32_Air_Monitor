@@ -6,6 +6,8 @@
 static char *NODE_CONTEXT = "2/3";
 static int NODE_ONOFF_STATUS = CONTEXT_ON;
 
+int NODE_STATUS = NODE_STATE_SIGUP_DEVICE2TB_STATE;
+
 void context_set_node_ctx(char *c){
     if (c != NULL) {
         NODE_CONTEXT = malloc(strlen(c) + 1); // +1 for the null terminator

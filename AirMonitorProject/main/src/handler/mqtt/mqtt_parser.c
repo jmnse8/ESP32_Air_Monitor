@@ -60,7 +60,7 @@ int parse_int_value(const char *payload){
 
 char * build_TB_prov_request(){
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "deviceName", "esp32_test6");
+    cJSON_AddStringToObject(root, "deviceName", "esp32_test7");
     cJSON_AddStringToObject(root, "provisionDeviceKey", "2lkpfzzf7bpy74iwzn66");
     cJSON_AddStringToObject(root, "provisionDeviceSecret", "03mt3l6srz9bijscmr9n");
 
@@ -69,21 +69,19 @@ char * build_TB_prov_request(){
     return data;
 } 
 
-char * get_access_token_TB_response(char *payload){
+char *get_access_token_TB_response(char *payload){
     cJSON* root = cJSON_Parse(payload);
-    char *acc_token = "IDK";
+    char *acc_token = NULL;
     char *expected_status = "SUCCESS";
     if (root != NULL){
         cJSON* statusItem = cJSON_GetObjectItem(root, "status");
         char *status = statusItem->valuestring;
         if(strncmp(expected_status, status, strlen(expected_status))==0){
-
             cJSON* tokenItem = cJSON_GetObjectItem(root, "credentialsValue");
             char *aux = tokenItem->valuestring;
             acc_token = malloc(strlen(aux)+1);
             strncpy(acc_token, aux, strlen(aux));
             acc_token[strlen(aux)] = '\0';
-            printf("acc_token = %s\n", acc_token);
         }
     }
     cJSON_Delete(root);

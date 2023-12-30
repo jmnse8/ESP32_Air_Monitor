@@ -11,6 +11,8 @@
 #include "c_wifiConnection.h"
 #include "c_sensorSI7021.h"
 #include "c_mqtt.h"
+#include "c_nvs.h"
+#include "context.h"
 
 #include "mqtt_handler.h"
 #include "sensor_handler.h"
@@ -33,9 +35,11 @@ static void init_event_handlers(){
 
 
 void setup(){
-    ESP_ERROR_CHECK(nvs_flash_init());
+    nvs_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    context_refresh_node_status(NULL);
 
     init_event_handlers();
     wifi_init();

@@ -197,7 +197,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         case MQTT_EVENT_CONNECTED:
             MQTT_STATUS = MQTT_CONNECTED;
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            //char *context_data = (char *)event_data;
             esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_CONNECTED, NULL, 0, 0);
             break;
 
@@ -296,7 +295,7 @@ void mqtt_stop_client(){
 }
 
 void mqtt_start_client(){
-    if(MQTT_STATUS == MQTT_SETUP){
+    if(mqtt_client == NULL && MQTT_STATUS == MQTT_SETUP){
         MQTT_STATUS = MQTT_INIT;
         /*
         esp_log_level_set("esp-tls", ESP_LOG_DEBUG);

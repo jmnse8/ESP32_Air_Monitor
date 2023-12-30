@@ -12,7 +12,7 @@
 #include "context.h"
 #include "cJSON.h"
 
-static const char* TAG = "MQTT_MANAGER";
+static const char* TAG = "MQTT_HANDLER";
 //char *NODE_CONTEXT_MAIN = "2/3";
 
 static const char* PROVISION_REQUEST_TOPIC = "/provision/request";
@@ -54,17 +54,41 @@ static void _signup2tb(){
     free(request);
 }
 
-
-static void _get_access_token_TB(char *payload){
-    char * token = get_access_token_TB_response(payload);
-    printf("token = %s\n", token);
-
-    
+static void _start_with_tb_token(char *token){
     mqtt_stop_client();
     mqtt_set_qos(1);
     mqtt_set_username(token);
     mqtt_start_client();
+    context_refresh_node_status(NODE_STATE_REGULAR);
+}
 
+
+static void _get_access_token_TB(char *payload){
+    char * token = get_access_token_TB_response(payload);
+
+    if(token!=NULL){
+        context_set_node_tb_token(token);
+        _start_with_tb_token(token);
+        free(token);
+    }
+}
+
+static void _on_connected(){
+    switch (context_get_node_status()) {
+        case NODE_STATE_HAS_TB_TOKEN:
+            _start_with_tb_token(context_get_node_tb_token());
+            break;
+        case NODE_STATE_SIGUP_DEVICE2TB_STATE:
+            _signup2tb();
+            break;
+        case NODE_STATE_REGULAR:
+
+            ESP_LOGI(TAG, "_on_connected ALL GUD");
+            break;
+        default:
+            ESP_LOGI(TAG, "EH?");
+            break;
+    }
 }
 
 
@@ -83,8 +107,7 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
             ESP_LOGI(TAG, "MQTT CONNECTED");
             //mqtt_subscribe_to_topic("v1/devices/me/rpc/request/+");
 
-            _signup2tb();
-            //mqtt_subscribe_to_topic(build_topic(context_get_node_ctx(), "/+"));
+            _on_connected();
 
         break;
         case C_MQTT_EVENT_DISCONNECTED:

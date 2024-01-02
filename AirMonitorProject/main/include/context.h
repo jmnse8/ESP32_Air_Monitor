@@ -13,7 +13,8 @@ enum NODE_STATE_ENUM{
     NODE_STATE_SIGUP_DEVICE2TB_STATE,   //Signing tp to TB
 
     NODE_STATE_HAS_TB_TOKEN,            //Wifi + Has TB token
-    NODE_STATE_REGULAR,                 // Wifi + TB connection
+    NODE_STATE_WAIT_CTX,                //Waiting for TB to send the node's context
+    NODE_STATE_REGULAR,                 // Wifi + Node with context + TB connection
 
 };
 

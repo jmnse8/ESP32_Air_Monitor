@@ -15,12 +15,14 @@
 static const char* TAG = "MQTT_HANDLER";
 //char *NODE_CONTEXT_MAIN = "2/3";
 
+static const char* PROVISION_USERNAME = "provision";
 static const char* PROVISION_REQUEST_TOPIC = "/provision/request";
 static const char* PROVISION_RESPONSE_TOPIC = "/provision/response";
+static const char* RPC_REQUEST_TOPIC = "v1/devices/me/rpc/request/+";
 
 
 static void freq_topic_handler(char *data){
-    int res = parse_int_value(data);
+    int res = parse_params_int_value(data);
     if (res > 0) {
         //change_sample_period_sgp30(res);
         ESP_LOGI(TAG, "FREQ value is %d", res);
@@ -31,7 +33,7 @@ static void freq_topic_handler(char *data){
 
 
 static void onoff_topic_handler(char *data){
-    switch (parse_bool_value(data)) {
+    switch (parse_params_bool_value(data)) {
         case 0:
             ESP_LOGI(TAG, "SENSOR OFF");
             //stop_sensor_sgp30();
@@ -58,6 +60,7 @@ static void _start_with_tb_token(char *token){
     mqtt_stop_client();
     mqtt_set_qos(1);
     mqtt_set_username(token);
+    mqtt_set_lwt_msg(context_get_node_ctx());
     mqtt_start_client();
     context_refresh_node_status(NODE_STATE_REGULAR);
 }
@@ -73,16 +76,25 @@ static void _get_access_token_TB(char *payload){
     }
 }
 
+static void _get_node_ctx_from_TB(char *payload){
+    char *ctx;
+    parse_params_str_value(payload, &ctx);
+    context_set_node_ctx(ctx);
+    free(ctx);
+}
+
 static void _on_connected(){
     switch (context_get_node_status()) {
         case NODE_STATE_HAS_TB_TOKEN:
+        case NODE_STATE_WAIT_CTX:
             _start_with_tb_token(context_get_node_tb_token());
             break;
         case NODE_STATE_SIGUP_DEVICE2TB_STATE:
             _signup2tb();
             break;
         case NODE_STATE_REGULAR:
-
+            mqtt_subscribe_to_topic(RPC_REQUEST_TOPIC);
+            mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
             ESP_LOGI(TAG, "_on_connected ALL GUD");
             break;
         default:
@@ -105,10 +117,7 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
     switch(id){
         case C_MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT CONNECTED");
-            //mqtt_subscribe_to_topic("v1/devices/me/rpc/request/+");
-
             _on_connected();
-
         break;
         case C_MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT DISCONNECTED");
@@ -119,6 +128,9 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
             int res;
             char *request_id;
             switch(parse_method(mqtt_data->data)){
+                case MQTT_SET_CTX:
+                    _get_node_ctx_from_TB(mqtt_data->data);
+                    break;
                 case MQTT_GET_SENSOR_STAT_TOPIC:
                     handler_get_sensor_stat(mqtt_topic_last_token(mqtt_data->topic));
                 break;
@@ -181,6 +193,7 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
 
 void mqtt_init(){
     mqtt_set_qos(1);
-    //context_get_node_ctx()
+    mqtt_set_username(PROVISION_USERNAME);
+    mqtt_set_lwt_msg(context_get_node_ctx());
     mqtt_start_client();
 }

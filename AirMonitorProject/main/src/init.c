@@ -12,6 +12,7 @@
 #include "c_sensorSI7021.h"
 #include "c_mqtt.h"
 #include "c_sntp.h"
+#include "c_deepSleep.h"
 
 
 #include "mqtt_handler.h"
@@ -44,6 +45,7 @@ void setup(){
     mqtt_init();
 
     sntp_sync_time_init();
+    init_deep_sleep();
     si7021_init_sensor();
     sgp30_init_sensor();
 }

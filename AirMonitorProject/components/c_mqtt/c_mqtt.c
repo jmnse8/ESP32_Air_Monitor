@@ -37,7 +37,7 @@ enum {
 int MQTT_STATUS = MQTT_SETUP;
 int MQTT_QOS = 0;
 char *MQTT_USERNAME = NULL;
-char *MQTT_LWT_MESSAGE = "ME MORI xdxd";
+char *MQTT_LWT_MESSAGE = NULL;
 int MQTT_PORT = 1883;
 
 
@@ -85,13 +85,16 @@ int mqtt_set_lwt_msg(char *msg){
             free(MQTT_LWT_MESSAGE);
 
         int len = strlen(msg);
-        MQTT_LWT_MESSAGE = malloc(len + 1);
+        MQTT_LWT_MESSAGE = malloc((len + 1) * sizeof(char));
 
         if (MQTT_LWT_MESSAGE != NULL) {
             strncpy(MQTT_LWT_MESSAGE, msg, len);
             MQTT_LWT_MESSAGE[len] = '\0'; 
+            printf("\nMQTT_LWT_MESSAGE is %s\n", MQTT_LWT_MESSAGE);
             return 0;
-        } 
+        }else{
+            ESP_LOGE(TAG, "eeeeeeeeeeeeeeeeeeeeee");
+        }
     }
     return 1;
 }
@@ -249,7 +252,7 @@ static void mqtt_start(){
             }
         },
         .credentials = {
-            .username = "provision",
+            .username = MQTT_USERNAME,
             //.username = "8nyHV2MCBKKqa7Mfs6sG",
             //.username = "0erTLZgiRFIiCzgn1AnT",
         },
@@ -269,11 +272,6 @@ static void mqtt_start(){
         },
         #endif
     };
-
-    if(MQTT_USERNAME!=NULL){
-        mqtt_cfg.credentials.username = MQTT_USERNAME;
-    }
-        
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
     /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */

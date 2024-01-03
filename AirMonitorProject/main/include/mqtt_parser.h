@@ -3,6 +3,7 @@
 
 enum MQTT_TB_CMD {
     MQTT_INVALID_VALUE = -1,
+    MQTT_OK = 0,
     MQTT_GET_FREQ_TOPIC,
     MQTT_GET_ONOFF_TOPIC,
     MQTT_GET_MODE_TOPIC,
@@ -14,6 +15,7 @@ enum MQTT_TB_CMD {
     MQTT_SET_ONOFF_TOPIC,
     MQTT_SET_MODE_TOPIC,
 
+    MQTT_SET_CTX,
     MQTT_SET_PROV_TOKEN,
 };
 
@@ -45,10 +47,13 @@ int its_for_me(const char *payload);
 int parse_method(const char *payload);
 
 
-int parse_bool_value(const char *payload);
+int parse_params_bool_value(const char *payload);
 
 
-int parse_int_value(const char *payload);
+int parse_params_int_value(const char *payload);
+
+
+int parse_params_str_value(const char* payload, char** str);
 
 /**
  * @brief Builds the provisioning request JSON to send to TB

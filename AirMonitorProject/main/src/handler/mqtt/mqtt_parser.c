@@ -26,7 +26,7 @@ int its_for_me(const char *payload){
     return res;
 }
 
-int parse_bool_value(const char *payload){
+int parse_params_bool_value(const char *payload){
     cJSON* root = cJSON_Parse(payload);
     int result = MQTT_INVALID_VALUE;
     if (root != NULL){
@@ -41,7 +41,7 @@ int parse_bool_value(const char *payload){
     return result;
 }
 
-int parse_int_value(const char *payload){
+int parse_params_int_value(const char *payload){
     cJSON* root = cJSON_Parse(payload);
     int result = MQTT_INVALID_VALUE;
 
@@ -57,10 +57,33 @@ int parse_int_value(const char *payload){
     return result;
 }
 
+int parse_params_str_value(const char* payload, char** str){
+    cJSON* root = cJSON_Parse(payload);
+    int result = MQTT_INVALID_VALUE;
+
+    if (root != NULL){
+        cJSON* paramsItem = cJSON_GetObjectItem(root, "params");
+        cJSON* valueItem = cJSON_GetObjectItem(paramsItem, "val");
+
+        if(valueItem!=NULL){
+            char *aux = valueItem->valuestring;
+            int len = strlen(aux);
+            *str = malloc(len * sizeof(char));
+            if (*str != NULL) {
+                strcpy(*str, aux);
+                result = MQTT_OK;
+            }
+            result = MQTT_OK;
+        }
+    }
+    cJSON_Delete(root);
+    return result;
+}
+
 
 char * build_TB_prov_request(){
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "deviceName", "esp32_test7");
+    cJSON_AddStringToObject(root, "deviceName", "esp32A");
     cJSON_AddStringToObject(root, "provisionDeviceKey", "2lkpfzzf7bpy74iwzn66");
     cJSON_AddStringToObject(root, "provisionDeviceSecret", "03mt3l6srz9bijscmr9n");
 
@@ -86,12 +109,15 @@ char *get_access_token_TB_response(char *payload){
     }
     cJSON_Delete(root);
     return acc_token;
-} 
+}
 
 
 static int parse_topic(char *topic){
 
-    if (strcmp(topic, "FREQ") == 0) {
+    if (strcmp(topic, "CTX") == 0) {
+        return MQTT_SET_CTX;
+    } 
+    else if (strcmp(topic, "FREQ") == 0) {
         return MQTT_SET_FREQ_TOPIC;
     } 
     else if (strcmp(topic, "ONOFF") == 0){
@@ -155,9 +181,6 @@ int parse_method(const char *payload) {
             return _parse_TB_token_response(root);
     }
     cJSON_Delete(root);
-
-   
-
     return res;
 }
 

@@ -49,6 +49,6 @@ void setup(){
 
     sntp_sync_time_init();
     si7021_init_sensor();
-    sgp30_init_sensor();
+    //sgp30_init_sensor();
 }
 

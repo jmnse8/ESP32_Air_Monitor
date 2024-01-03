@@ -1,15 +1,68 @@
-menu "Com Thingsboard Configuration"
+menu "Com MQTT - Thingsboard Configuration"
 
-    config TB_TELEMETRY_TOPIC
-        string "Thingsboard Telemetry Topic"
-        default "v1/devices/me/telemetry"
-        help
-            Topic to publish/subscribe to in order to send telemetry to TB
+    menu "Provisioning"
 
-    config TB_RESPONSE_TOPIC
-        string "Thingsboard Response Topic"
-        default "v1/devices/me/rpc/response/"
-        help
-            Topic to publish/subscribe to in order to answer requests from TB
+        config TB_PROVISION_USERNAME
+            string "Thingsboard provision Username"
+            default "provision"
+
+        config TB_PROVISION_DEVICE_KEY
+            string "Thingsboard device profile's provision key"
+            default "2lkpfzzf7bpy74iwzn66"
+            help
+                Look at Device profiles -> select device -> Device provisioning
+
+        config TB_PROVISION_DEVICE_SECRET
+            string "Thingsboard device profile's provision secret"
+            default "03mt3l6srz9bijscmr9n"
+            help
+                Look at Device profiles -> select device -> Device provisioning
+            
+        config TB_PROVISION_REQUEST_TOPIC
+            string "Thingsboard provision request Topic"
+            default "/provision/request"
+            help
+                Topic to publish your provisioning request
+    
+        config TB_PROVISION_RESPONSE_TOPIC
+            string "Thingsboard provision response Topic"
+            default "/provision/response"
+            help
+                Topic to subscribe to in order to receive the provision request's answer
+    
+    endmenu
+
+    menu "Communication"
+        config TB_TELEMETRY_TOPIC
+            string "Thingsboard Telemetry Topic"
+            default "v1/devices/me/telemetry"
+            help
+                Topic to publish/subscribe to in order to send telemetry to TB
+    
+        config TB_RPC_RESPONSE_TOPIC
+            string "Thingsboard Response Topic"
+            default "v1/devices/me/rpc/response/"
+            help
+                Topic to publish/subscribe to in order to answer petitions from TB. End it with /
+
+        config TB_RPC_REQUEST_TOPIC
+            string "Thingsboard Request Topic"
+            default "v1/devices/me/rpc/request/+"
+
+    endmenu
+
+endmenu
+
+
+
+menu "Com NVS Configuration"
+
+    config NVS_KEY_TB_TOKEN
+        string "Key associated with the access token provisioned by thingsboard"
+        default "tb_prov_token"
+
+    config NVS_KEY_TB_CTX
+        string "Key associated with the node's context"
+        default "tb_node_ctx"
 
 endmenu

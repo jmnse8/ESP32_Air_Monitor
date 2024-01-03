@@ -83,7 +83,7 @@ int parse_params_str_value(const char* payload, char** str){
 
 char * build_TB_prov_request(){
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "deviceName", "esp32E");
+    cJSON_AddStringToObject(root, "deviceName", "esp32A");
     cJSON_AddStringToObject(root, "provisionDeviceKey", "2lkpfzzf7bpy74iwzn66");
     cJSON_AddStringToObject(root, "provisionDeviceSecret", "03mt3l6srz9bijscmr9n");
 

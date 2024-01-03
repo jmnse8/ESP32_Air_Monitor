@@ -13,12 +13,6 @@
 #include "cJSON.h"
 
 static const char* TAG = "MQTT_HANDLER";
-//char *NODE_CONTEXT_MAIN = "2/3";
-
-static const char* PROVISION_USERNAME = "provision";
-static const char* PROVISION_REQUEST_TOPIC = "/provision/request";
-static const char* PROVISION_RESPONSE_TOPIC = "/provision/response";
-static const char* RPC_REQUEST_TOPIC = "v1/devices/me/rpc/request/+";
 
 
 static void freq_topic_handler(char *data){
@@ -47,12 +41,11 @@ static void onoff_topic_handler(char *data){
     }
 }
 
-
 static void _signup2tb(){
-    mqtt_subscribe_to_topic(PROVISION_RESPONSE_TOPIC);
+    mqtt_subscribe_to_topic(CONFIG_TB_PROVISION_RESPONSE_TOPIC);
     char * request = build_TB_prov_request();
 
-    int res = mqtt_publish_to_topic(PROVISION_REQUEST_TOPIC, (uint8_t*)request, strlen(request));
+    mqtt_publish_to_topic(CONFIG_TB_PROVISION_REQUEST_TOPIC, (uint8_t*)request, strlen(request));
     free(request);
 }
 
@@ -93,7 +86,7 @@ static void _on_connected(){
             _signup2tb();
             break;
         case NODE_STATE_REGULAR:
-            mqtt_subscribe_to_topic(RPC_REQUEST_TOPIC);
+            mqtt_subscribe_to_topic(CONFIG_TB_RPC_REQUEST_TOPIC);
             mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
             ESP_LOGI(TAG, "_on_connected ALL GUD");
             break;
@@ -136,7 +129,7 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
                 break;
                 case MQTT_SET_SENSOR_STAT_TOPIC:
                     request_id = mqtt_topic_last_token(mqtt_data->topic);
-                    handler_set_sensor_stat(mqtt_data->data, build_topic(CONFIG_TB_RESPONSE_TOPIC, request_id));
+                    handler_set_sensor_stat(mqtt_data->data, build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id));
                     free(request_id);
 
                 break;
@@ -151,7 +144,7 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
                     cJSON_AddBoolToObject(root, "onoff", onoff);
 
                     char *data = cJSON_Print(root);
-                    mqtt_publish_to_topic(build_topic(CONFIG_TB_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
+                    mqtt_publish_to_topic(build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
 
                     free((void*)data);
                     free(request_id);
@@ -182,18 +175,14 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
                     ESP_LOGE(TAG, "UNKNOWN TOPIC: %s", mqtt_data->topic);
                 break;
             }
-
-
-
         break;
-
     }
 }
 
 
 void mqtt_init(){
     mqtt_set_qos(1);
-    mqtt_set_username(PROVISION_USERNAME);
+    mqtt_set_username(CONFIG_TB_PROVISION_USERNAME);
     mqtt_set_lwt_msg(context_get_node_ctx());
     mqtt_start_client();
 }

@@ -151,7 +151,7 @@ void handler_get_sensor_stat(char *request_id){
     cJSON_AddBoolToObject(root, "4", char2bool(status[3]));
     
     char *data = cJSON_Print(root);
-    mqtt_publish_to_topic(build_topic(CONFIG_TB_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
+    mqtt_publish_to_topic(build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
 
     free((void*)data);
     free(si7021_mode);

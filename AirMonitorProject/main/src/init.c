@@ -46,6 +46,6 @@ void setup(){
     mqtt_init();
 
     si7021_init_sensor();
-    sgp30_init_sensor();
+    //sgp30_init_sensor();
 }
 

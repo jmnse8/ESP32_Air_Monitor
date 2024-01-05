@@ -41,8 +41,10 @@ char *context_get_node_tb_token();
 
 /**
  * @brief Set node floor/room context
+ * @param
+ *      save: If 1, save it in nvs
 */
-void context_set_node_ctx(char *c);
+void context_set_node_ctx(char *c, int save);
 
 /**
  * @brief Get node floor/room context

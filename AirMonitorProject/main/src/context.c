@@ -69,7 +69,7 @@ char *context_get_node_tb_token(){
     return NODE_TB_TOKEN;
 }
 
-void context_set_node_ctx(char *c){
+void context_set_node_ctx(char *c, int save){
     if (c != NULL) {
         int len = strlen(c);
 
@@ -80,7 +80,8 @@ void context_set_node_ctx(char *c){
         strncpy(NODE_CONTEXT, c, len);
         NODE_CONTEXT[len] = '\0';
 
-        nvs_write_string(CONFIG_NVS_KEY_TB_CTX, NODE_CONTEXT);
+        if(save)
+            nvs_write_string(CONFIG_NVS_KEY_TB_CTX, NODE_CONTEXT);
 
         ESP_LOGI(TAG, "\n NODE_CONTEXT IS NOW %s\n", NODE_CONTEXT);
     }
@@ -91,7 +92,7 @@ char *context_get_node_ctx(){
         if(nvs_read_string(CONFIG_NVS_KEY_TB_CTX, &NODE_CONTEXT)!=NVS_OK){
             if(NODE_STATUS==NODE_STATE_REGULAR)
                 ESP_LOGE(TAG, "Ctx is not in nvs. Setting provisional value to: CONTEXTO PROVISIONAL");
-            context_set_node_ctx("CONTEXTO PROVISIONAL");
+            context_set_node_ctx("CONTEXTO PROVISIONAL", 0);
         }
         else{
             ESP_LOGD(TAG, "NVS_KEY_TB_CTX = %s\n", NODE_CONTEXT);

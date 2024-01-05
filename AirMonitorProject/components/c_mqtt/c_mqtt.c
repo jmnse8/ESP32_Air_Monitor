@@ -118,8 +118,8 @@ int mqtt_set_qos(int qos){
 
 int mqtt_subscribe_to_topic(char* topic){
     if(MQTT_STATUS == MQTT_CONNECTED){
-       int msg_id = esp_mqtt_client_subscribe(mqtt_client, topic, MQTT_QOS);
-        ESP_LOGI(TAG, "sent subscribe with msg_id=%d and qos=%d", msg_id, MQTT_QOS);
+        esp_mqtt_client_subscribe(mqtt_client, topic, MQTT_QOS);
+        ESP_LOGI(TAG, "Sent subscription request to topic: %s", topic);
         return 0;
     }
 

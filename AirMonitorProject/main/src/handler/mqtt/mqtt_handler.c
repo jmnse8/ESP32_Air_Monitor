@@ -72,7 +72,7 @@ static void _get_access_token_TB(char *payload){
 static void _get_node_ctx_from_TB(char *payload){
     char *ctx;
     parse_params_str_value(payload, &ctx);
-    context_set_node_ctx(ctx);
+    context_set_node_ctx(ctx, 1);
     free(ctx);
 }
 
@@ -87,8 +87,10 @@ static void _on_connected(){
             break;
         case NODE_STATE_REGULAR:
             mqtt_subscribe_to_topic(CONFIG_TB_RPC_REQUEST_TOPIC);
+            #ifdef CONFIG_MQTT_LWT_TOPIC
             mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
-            ESP_LOGI(TAG, "_on_connected ALL GUD");
+            #endif
+            ESP_LOGI(TAG, "\n\n_on_connected ALL GUD");
             break;
         default:
             ESP_LOGI(TAG, "EH?");

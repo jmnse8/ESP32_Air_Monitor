@@ -1,0 +1,34 @@
+menu "DeepSleep Configuration"
+    menu "Wake up time"
+        config START_HOUR
+            int "Wake up hour"
+            default 8
+            help 
+                Ingrese hora en la que comenzara el dispositivo a funcionar
+        
+        config START_MINUTE
+            int "Wake up minute"
+            default 0
+            help
+                Ingrese minuto en la que comenzara el dispositivo a funcionar
+
+
+    endmenu
+    
+
+    menu "Sleep time"
+        config FINAL_HOUR
+            int "Sleep hour"
+            default 22
+            help 
+                Ingrese hora en la que terminara el dispositivo de funcionar
+        
+        config FINAL_MINUTE
+            int "Sleep minute"
+            default 0
+            help
+                Ingrese minuto en la que terminara el dispositivo de funcionar
+    
+    endmenu
+
+endmenu

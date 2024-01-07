@@ -87,7 +87,7 @@ static void _on_connected(){
             break;
         case NODE_STATE_REGULAR:
             mqtt_subscribe_to_topic(CONFIG_TB_RPC_REQUEST_TOPIC);
-            mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
+            //mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
             ESP_LOGI(TAG, "_on_connected ALL GUD");
             break;
         default:

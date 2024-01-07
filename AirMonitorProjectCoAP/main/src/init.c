@@ -10,7 +10,7 @@
 #include "c_I2C.h"
 #include "c_wifiConnection.h"
 #include "c_sensorSI7021.h"
-#include "c_mqtt.h"
+#include "c_coap.h"
 #include "c_sntp.h"
 
 #include "c_nvs.h"

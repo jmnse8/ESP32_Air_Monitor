@@ -3,6 +3,10 @@
 #include "esp_log.h"
 #include "coap_handler.h"
 #include "c_coap.h"
+#include <string.h>
+
+char *get_access_token_TB_responseC(char *payload);
+static void _get_access_token_TB(char *payload);
 
 void coap_init(){
     coap_start_client();
@@ -10,19 +14,19 @@ void coap_init(){
 
 void coap_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data) {
     char *payload = (char *)event_data;
-    _get_access_token_TB(char *payload)
+    _get_access_token_TB(payload);
 }
 
 static void _get_access_token_TB(char *payload){
-    char * token = get_access_token_TB_response(payload);
+    char * token = get_access_token_TB_responseC(payload);
 
     if(token!=NULL){
         context_set_node_tb_token(token);
-        _start_with_tb_token(token);
+        //_start_with_tb_token(token);
         free(token);
     }
 }
-char *get_access_token_TB_response(char *payload){
+char *get_access_token_TB_responseC(char *payload){
     cJSON* root = cJSON_Parse(payload);
     char *acc_token = NULL;
     char *expected_status = "SUCCESS";

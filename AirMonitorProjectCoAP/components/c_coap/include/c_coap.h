@@ -14,7 +14,6 @@ typedef enum {
     C_COAP_SEND_HUM,
     C_COAP_SEND_CO2,
     C_COAP_SEND_TVOC,
-    C_COAP_PROV,
 } CoapDataType;
 
 void coap_start_client();

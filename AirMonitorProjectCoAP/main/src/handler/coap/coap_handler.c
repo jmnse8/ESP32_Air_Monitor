@@ -22,6 +22,7 @@ static void _get_access_token_TB(char *payload){
 
     if(token!=NULL){
         context_set_node_tb_token(token);
+        save_device_token(token);
         //_start_with_tb_token(token);
         free(token);
     }

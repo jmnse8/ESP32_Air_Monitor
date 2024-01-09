@@ -49,6 +49,7 @@ void setup(){
     init_event_handlers();
     wifi_init();
     //mqtt_init();
+    coap_init();
 
     sntp_sync_time_init();
     si7021_init_sensor();

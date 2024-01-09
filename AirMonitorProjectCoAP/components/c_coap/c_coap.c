@@ -11,6 +11,7 @@ ESP_EVENT_DEFINE_BASE(C_COAP_EVENT_BASE);
 
 coap_context_t *ctx = NULL;
 coap_session_t *session = NULL;
+char *DEVICE_TOKEN = NULL;
 
 //static coap_optlist_t *optlist_general = NULL;
 
@@ -102,23 +103,23 @@ static coap_optlist_t *generate_optlist(char *device_token, CoapDataType type) {
 }
 
 void coap_stop_client(){
-    /* if (optlist) {
-        coap_delete_optlist(optlist);
-        optlist = NULL;
-    }
     if (session) {
         coap_session_release(session);
     }
     if (ctx) {
         coap_free_context(ctx);
-    } */
+    }
     coap_cleanup();
+}
+
+void save_device_token(char *device_token){
+
 }
 
 
 
 //Publish some data
-int coap_send_data(char *data, CoapDataType type, char *device_token) {
+int coap_send_data(char *data, CoapDataType type) {
     size_t tokenlength;
     unsigned char token[8];
     coap_pdu_t *request = NULL;
@@ -132,13 +133,15 @@ int coap_send_data(char *data, CoapDataType type, char *device_token) {
     coap_session_new_token(session, &tokenlength, token);
     coap_add_token(request, tokenlength, token);
 
-    coap_optlist_t* optlistsend = generate_optlist(device_token, type);
+    coap_optlist_t* optlistsend = generate_optlist(DEVICE_TOKEN, type);
     coap_add_optlist_pdu(request, &optlistsend);
 
     coap_add_data(request, strlen(data), (unsigned char*) data);
 
     coap_send(session, request);
 
+    coap_delete_optlist(optlistsend);
+    optlistsend = NULL;
     return 0;
     //return ESP_OK;
 }

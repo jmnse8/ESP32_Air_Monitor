@@ -20,8 +20,8 @@ void coap_start_client();
 
 void coap_stop_client();
 
-
+void save_device_token(char *device_token);
 //Publish data
-int coap_send_data(char *data, CoapDataType type, char *device_token);
+int coap_send_data(char *data, CoapDataType type);
 
 #endif

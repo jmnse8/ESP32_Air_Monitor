@@ -243,11 +243,6 @@ void provisioning_init(void)
         wifi_prov_mgr_reset_sm_state_for_reprovision();
         xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, true, true, portMAX_DELAY);
     }
-#else
-     while (1) {
-         ESP_LOGI(TAG, "Hello World!");
-         vTaskDelay(1000 / portTICK_PERIOD_MS);
-     }
 #endif
 
 }

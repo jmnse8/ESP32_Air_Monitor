@@ -49,7 +49,7 @@ void setup(){
     init_event_handlers();
     provisioning_init();
     //wifi_init();
-    //mqtt_init();
+    mqtt_init();
 
     //sntp_sync_time_init();
     //init_deep_sleep();

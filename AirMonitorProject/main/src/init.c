@@ -13,12 +13,14 @@
 #include "c_mqtt.h"
 #include "c_sntp.h"
 #include "c_deepSleep.h"
+#include "c_provisioning.h"
 
 #include "c_nvs.h"
 #include "context.h"
 
 #include "mqtt_handler.h"
 #include "sensor_handler.h"
+
 
 
 static void init_event_handlers(){
@@ -45,12 +47,14 @@ void setup(){
     context_refresh_node_status(NULL);
 
     init_event_handlers();
-    wifi_init();
-    mqtt_init();
+    provisioning_init();
+    //wifi_init();
+    //mqtt_init();
 
-    sntp_sync_time_init();
-    init_deep_sleep();
-    si7021_init_sensor();
+    //sntp_sync_time_init();
+    //init_deep_sleep();
+    //si7021_init_sensor();
     //sgp30_init_sensor();
+    
 }
 

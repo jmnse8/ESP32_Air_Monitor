@@ -5,7 +5,7 @@ idf_component_register(
     REQUIRES 
         mqtt esp_wifi nvs_flash protocol_examples_common
 
-    EMBED_TXTFILES ${project_dir}/components/c_mqtt/certs/ca_cert.pem
+    EMBED_TXTFILES certs/tb_mqtt_cert.pem
 ) 
 
 

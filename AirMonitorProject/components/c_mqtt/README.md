@@ -14,11 +14,12 @@ ESP_ERROR_CHECK(example_connect());
 ```
 
 ### If can't find protocol_examples_common, add in CMakelists.txt(the one at the same level as /main):
+```
 set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
+```
 
+## Authentication: username & pwd ([Tutorial](http://www.steves-internet-guide.com/mqtt-username-password-example/))
 
-## Authentication: username & pwd
-[Tutorial](http://www.steves-internet-guide.com/mqtt-username-password-example/)
 
 | USERNAME  |    PWD   |
 |-----------|----------|

@@ -6,6 +6,13 @@ menu "Com MQTT Configuration"
         help
             URL of the broker to connect to
 
+    config MQTT_BROKER_PORT
+        int "Broker port"
+        default 1883
+        help
+            Port of the broker to connect to
+
+
     # Define a configuration option to enable or disable MQTT LWT
     config MQTT_USE_LWT
         bool "Enable MQTT Last Will and Testament (LWT)"

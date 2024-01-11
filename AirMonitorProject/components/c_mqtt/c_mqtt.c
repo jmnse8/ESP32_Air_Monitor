@@ -38,11 +38,12 @@ int MQTT_STATUS = MQTT_SETUP;
 int MQTT_QOS = 0;
 char *MQTT_USERNAME = NULL;
 char *MQTT_LWT_MESSAGE = NULL;
-int MQTT_PORT = 1883;
 
 
 static const char *TAG = "C_MQTT";
 static char *MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
+int MQTT_PORT = CONFIG_MQTT_BROKER_PORT;
+
 
 static esp_mqtt_client_handle_t mqtt_client;
 
@@ -139,11 +140,10 @@ int mqtt_unsubscribe_to_topic(char* topic){
 int mqtt_publish_to_topic(char* topic, uint8_t* data, int data_length){
     if(MQTT_STATUS == MQTT_CONNECTED){
         int retain = 0;
-        int msg_id = esp_mqtt_client_publish(mqtt_client, topic, (const void *)data, data_length, MQTT_QOS, retain);
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+        esp_mqtt_client_publish(mqtt_client, topic, (const void *)data, data_length, MQTT_QOS, retain);
+        //ESP_LOGI(TAG, "Published to topic %s with data %s", topic, (char *)data);
         return 0;
     }
-
     return 1;
 }
 
@@ -153,33 +153,29 @@ int mqtt_publish_to_topic(char* topic, uint8_t* data, int data_length){
 */
 static void handle_received_data(const char* topic, int topic_len, const char* data, int data_len) {
 
-    // Allocate memory for the struct
-    struct mqtt_com_data* mqtt_data = malloc(sizeof(struct mqtt_com_data));
+    struct c_mqtt_data* mqtt_data = malloc(sizeof(struct c_mqtt_data));
     if (mqtt_data == NULL) {
-        // Handle allocation failure
         return;
     }
 
-    // Allocate memory for the strings and copy data
-    mqtt_data->topic = malloc(topic_len + 1);  // +1 for null terminator
-    mqtt_data->data = malloc(data_len + 1);    // +1 for null terminator
+    mqtt_data->topic = malloc(topic_len + 1);
+    mqtt_data->data = malloc(data_len + 1);
+    mqtt_data->data_len = data_len;
 
     if (mqtt_data->topic == NULL || mqtt_data->data == NULL) {
-        // Handle allocation failure
         free(mqtt_data->topic);
         free(mqtt_data->data);
         free(mqtt_data);
         return;
     }
 
-    // Copy the data into the struct
     memcpy(mqtt_data->topic, topic, topic_len);
-    mqtt_data->topic[topic_len] = '\0';  // Null-terminate the string
+    mqtt_data->topic[topic_len] = '\0';
     memcpy(mqtt_data->data, data, data_len);
-    mqtt_data->data[data_len] = '\0';    // Null-terminate the string
+    mqtt_data->data[data_len] = '\0';
 
-    // Post the event
-    esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, mqtt_data, sizeof(struct mqtt_com_data), 0);
+    esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, (void *)mqtt_data, sizeof(struct c_mqtt_data), 0);
+    
 }
 
 /**
@@ -218,11 +214,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             break;
 
         case MQTT_EVENT_PUBLISHED:
-            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+            //ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
             break;
 
         case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            //ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            //esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, (void *)event, sizeof(event), 0);
             handle_received_data((const char*)event->topic, event->topic_len, (const char*)event->data, event->data_len);
             break;
 

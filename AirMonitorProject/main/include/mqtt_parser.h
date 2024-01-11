@@ -17,9 +17,22 @@ enum MQTT_TB_CMD {
 
     MQTT_SET_CTX,
     MQTT_SET_PROV_TOKEN,
+
+    MQTT_OTA_UPDATE_SETUP,
+    MQTT_OTA_UPDATE_DATA,
+
+
+
+    TB_TOPIC_ATTR_REQ,      //  v1/devices/me/attributes
+    TB_TOPIC_ATTR_RESP,     //  v1/devices/me/attributes/response
+
+    TB_TOPIC_PROV_RESP,     //  /provision/response
+
+    TB_TOPIC_RPC_REQ        // v1/devices/me/rpc/request/{request_id}
 };
 
 
+int parse_topic(const char *topic);
 
 /**
  * @brief Get the topic's last token.

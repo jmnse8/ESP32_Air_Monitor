@@ -2,6 +2,7 @@
 #define __MQTT_COM
 
 #include "esp_event.h"
+#include "mqtt_client.h"
 
 ESP_EVENT_DECLARE_BASE(C_MQTT_EVENT_BASE);
 
@@ -19,9 +20,10 @@ enum{
     C_MQTT_EVENT_RECEIVED_DATA
 };
 
-struct mqtt_com_data{
+struct c_mqtt_data{
     char* topic;
     char* data;
+    int data_len;
 };
 
 /*

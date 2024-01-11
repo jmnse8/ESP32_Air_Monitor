@@ -42,10 +42,15 @@ int MQTT_QOS = 0;
 char *MQTT_USERNAME = NULL;
 char *MQTT_LWT_MESSAGE = NULL;
 
-
 static const char *TAG = "C_MQTT";
 static char *MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
-int MQTT_PORT = CONFIG_MQTT_BROKER_PORT;
+//int MQTT_PORT = CONFIG_MQTT_BROKER_PORT;
+int MQTT_PORT = 8883;
+
+#ifdef CONFIG_MQTT_USE_SECURE_VERSION
+extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
+extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
+#endif
 
 
 static esp_mqtt_client_handle_t mqtt_client;
@@ -161,8 +166,8 @@ static void handle_received_data(const char* topic, int topic_len, const char* d
         return;
     }
 
-    mqtt_data->topic = malloc(topic_len + 1);
-    mqtt_data->data = malloc(data_len + 1);
+    mqtt_data->topic = malloc(topic_len);
+    mqtt_data->data = malloc(data_len);
     mqtt_data->data_len = data_len;
 
     if (mqtt_data->topic == NULL || mqtt_data->data == NULL) {
@@ -173,9 +178,9 @@ static void handle_received_data(const char* topic, int topic_len, const char* d
     }
 
     memcpy(mqtt_data->topic, topic, topic_len);
-    mqtt_data->topic[topic_len] = '\0';
+    //mqtt_data->topic[topic_len] = '\0';
     memcpy(mqtt_data->data, data, data_len);
-    mqtt_data->data[data_len] = '\0';
+    //mqtt_data->data[data_len] = '\0';
 
     esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, (void *)mqtt_data, sizeof(struct c_mqtt_data), 0);
     

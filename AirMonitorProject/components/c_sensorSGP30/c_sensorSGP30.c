@@ -28,7 +28,9 @@ static void _sensor_timer_callback(void* arg);
 
 static const char* TAG = "SENSOR_SGP30";
 static int SENSOR_MODE;
-static int SENSOR_FREQ = CONFIG_SENSOR_FREQ;
+static int SAMPLING_SENSOR_FREQ_TVOC = CONFIG_SAMPLING_SENSOR_FREQ_TVOC;
+static int SAMPLING_SENSOR_FREQ_ECO2 = CONFIG_SAMPLING_SENSOR_FREQ_ECO2;
+static int SEND_SENSOR_FREQ = CONFIG_SEND_SENSOR_FREQ;
 static int SENSOR_N_PARAMS = 2;
 
 
@@ -36,6 +38,18 @@ sgp30_dev_t main_sgp30_sensor;
 
 static esp_timer_handle_t tvoc_sensor_timer;
 static esp_timer_handle_t eco2_sensor_timer;
+
+static esp_timer_handle_t send_sensor_timer;
+
+// Define el tipo de puntero a función
+typedef void (*TimerCallbackFunc)(void*);
+
+// Estructura para almacenar el puntero a función y el nombre del temporizador
+typedef struct {
+    TimerCallbackFunc callback;
+    char* name;
+} TimerConfig;
+
 
 
 static void _refresh_mode(){
@@ -50,11 +64,11 @@ static void _refresh_mode(){
 }
 
 
-static void _set_sensor_onoff(esp_timer_handle_t* timer, int status){
+static void _set_sensor_onoff(esp_timer_handle_t* timer, int status, int samplingSensorFreq){
 
     if((int)esp_timer_is_active(*timer) != status){
         if(status)
-            ESP_ERROR_CHECK(esp_timer_start_periodic(*timer, SENSOR_FREQ * 1000 * 1000));
+            ESP_ERROR_CHECK(esp_timer_start_periodic(*timer, samplingSensorFreq * 1000 * 1000));
         else
             ESP_ERROR_CHECK(esp_timer_stop(*timer));
 
@@ -76,20 +90,19 @@ char* sgp30_get_mode(){
 void sgp30_set_sensor_onoff(int sensor, int status){
     switch(sensor){
         case SENSORSGP30_ECO2_SENSOR:
-            _set_sensor_onoff(&eco2_sensor_timer, status);
+            _set_sensor_onoff(&eco2_sensor_timer, status, SAMPLING_SENSOR_FREQ_ECO2);
         break;
         case SENSORSGP30_TVOC_SENSOR:
-            _set_sensor_onoff(&tvoc_sensor_timer, status);
+            _set_sensor_onoff(&tvoc_sensor_timer, status, SAMPLING_SENSOR_FREQ_TVOC);
         break;
     }
 }
 
 
-static void _configure_timer(esp_timer_handle_t* timer, char *name){
-
+static void _configure_timer(esp_timer_handle_t* timer, TimerConfig* config) {
     const esp_timer_create_args_t sensor_timer_args = {
-            .callback = &_sensor_timer_callback,
-            .name = name
+        .callback = config->callback,
+        .name = config->name
     };
 
     ESP_ERROR_CHECK(esp_timer_create(&sensor_timer_args, timer));
@@ -141,26 +154,38 @@ void sgp30_init_sensor(void) {
     sgp30_get_IAQ_baseline(&main_sgp30_sensor, &eco2_baseline, &tvoc_baseline);
     ESP_LOGI(TAG, "BASELINES - TVOC: %d,  eCO2: %d",  tvoc_baseline, eco2_baseline);
 
-    _configure_timer(&tvoc_sensor_timer, "tvoc_timer");
-    _configure_timer(&eco2_sensor_timer, "eco2_timer");
+    TimerConfig timerConfigEco2 = {
+        .callback = &_sensor_timer_callback_eco2,
+        .name = "eco2_timer"
+    };
 
-    _set_sensor_onoff(&tvoc_sensor_timer, 1);
-    _set_sensor_onoff(&eco2_sensor_timer, 1);
+    TimerConfig timerConfigTvoc = {
+        .callback = &_sensor_timer_callback_tvoc,
+        .name = "tvoc_timer"
+    };
+    _configure_timer(&eco2_sensor_timer, &timerConfigEco2);
+    _configure_timer(&tvoc_sensor_timer, &timerConfigTvoc);
+
+    _set_sensor_onoff(&tvoc_sensor_timer, 1, SAMPLING_SENSOR_FREQ_TVOC);
+    _set_sensor_onoff(&eco2_sensor_timer, 1, SAMPLING_SENSOR_FREQ_ECO2);
 }
 
 
-static void _sensor_timer_callback(void* arg) {
+static void _sensor_timer_callback_tvoc(void* arg) {
     sgp30_IAQ_measure(&main_sgp30_sensor);
 
     if(SENSOR_MODE==SENSORSGP30_TVOC_MODE || SENSOR_MODE==SENSORSGP30_ALL_MODE){
         uint16_t tvoc = main_sgp30_sensor.TVOC;
         esp_event_post(SENSORSGP30_EVENT_BASE, SENSORSGP30_TVOC_DATA, &tvoc, sizeof(tvoc), 0);
     }
+}
+
+static void _sensor_timer_callback_eco2(void* arg) {
+    sgp30_IAQ_measure(&main_sgp30_sensor);
 
     if(SENSOR_MODE==SENSORSGP30_ECO2_MODE || SENSOR_MODE==SENSORSGP30_ALL_MODE){
         uint16_t eCO2 = main_sgp30_sensor.eCO2;
         esp_event_post(SENSORSGP30_EVENT_BASE, SENSORSGP30_ECO2_DATA, &eCO2, sizeof(eCO2), 0);
     }
 }
-
 

@@ -175,31 +175,6 @@ static void handle_received_data(const char* topic, int topic_len, const char* d
     mqtt_data->data[data_len] = '\0';
 
     esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, (void *)mqtt_data, sizeof(struct c_mqtt_data), 0);
-
-/*
-
-    if(mqtt_data!=NULL){
-
-        mqtt_data->topic = NULL;
-        mqtt_data->data = NULL;
-
-        mqtt_data->topic = malloc((topic_len + 1)*sizeof(char));
-        mqtt_data->data = malloc((data_len + 1)*sizeof(char));
-        mqtt_data->data_len = data_len;
-
-        if (mqtt_data->topic == NULL) {
-            ESP_LOGE(TAG, "mqtt_data->topic == NULL");
-        } else {
-            snprintf(mqtt_data->topic, topic_len, topic);
-            mqtt_data->topic[topic_len] = '\0';
-            snprintf(mqtt_data->data, data_len, data);
-            mqtt_data->data[data_len] = '\0';
-         
-        }
-
-       
-    }
-   */   
     
 }
 

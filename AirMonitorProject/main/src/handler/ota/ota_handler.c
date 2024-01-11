@@ -19,28 +19,28 @@
 #include "c_mqtt.h"
 #include <math.h>
 
-
-
 static const char* TAG = "OTA_HANDLER";
-static char *UPDATE_URL;
 int REQUEST_CHUNK = 0;
 int REQUEST_ID = 321654987;
 int file_size = 0;
-
+static int downloading = 0;
+static uint32_t n_chunks_downloaded = 0;
+static uint32_t n_total_chunks = 0;
 esp_ota_handle_t ota_handle;
 esp_partition_t *update_partition = NULL;
 
+
 extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
+
+static char *UPDATE_URL;
+
 
 enum{
     OTA_OK,
     OTA_ERR
 };
 
-
-//static int REQUEST_ID = 123456789;
-//static int REQUEST_CHUNK = 0;
 
 static bool _diagnostic(void) {
     ESP_LOGI(TAG, "Diagnostics (5 sec)...");
@@ -108,8 +108,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
 
 //int _download_update(char *url){
-void simple_ota_example_task(void *pvParameter){
+void _download_update(void *pvParameter){
     ESP_LOGI(TAG, "Starting OTA _download_update");
+    ota_update_status("DOWNLOADING");
+
     esp_http_client_config_t config = {
         .url = UPDATE_URL,
         #ifdef CONFIG_OTA_USE_CERT_BUNDLE
@@ -137,9 +139,13 @@ void simple_ota_example_task(void *pvParameter){
     esp_err_t ret = esp_https_ota(&ota_config);
     if (ret == ESP_OK) {
         ESP_LOGI(TAG, "OTA Succeed, Rebooting...");
+        ota_update_status("DOWNLOADED");
+        ota_update_status("UPDATING");
         esp_restart();
     } else {
         ESP_LOGE(TAG, "Firmware upgrade failed");
+        ota_update_status("FAILED");
+
     }
     while (1) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -150,10 +156,7 @@ void simple_ota_example_task(void *pvParameter){
 
 
 
-static int downloading = 0;
 
-static uint32_t n_chunks_downloaded = 0;
-static uint32_t n_total_chunks = 0;
 
 
 /**
@@ -201,7 +204,6 @@ void ota_update_chunk_received(char *data, int data_len) {
     n_chunks_downloaded += 1;
     ESP_LOGI(TAG, "Downloaded update chunk %lu/%lu", n_chunks_downloaded, n_total_chunks);
     file_size += data_len;
-    //printf("file_size = %d\n", file_size);
     if (n_chunks_downloaded < n_total_chunks)
         ota_download_chunk(n_chunks_downloaded);
     else 
@@ -210,7 +212,6 @@ void ota_update_chunk_received(char *data, int data_len) {
 
 
 void ota_start_update(int size) {
-    printf("size=%d\n\n", size);
 
     esp_err_t err;
     update_partition = esp_ota_get_next_update_partition(NULL);
@@ -244,7 +245,7 @@ void ota_incoming_update_handler(char * payload){
     ota_start_update(size);
     */
    UPDATE_URL = ota_get_update_url(payload);
-   xTaskCreate(&simple_ota_example_task, "ota_example_task", 8192, NULL, 5, NULL);
+   xTaskCreate(&_download_update, "_download_update_task", 8192, NULL, 5, NULL);
    //_download_update(url);
 }
 

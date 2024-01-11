@@ -27,6 +27,9 @@
 
 ESP_EVENT_DEFINE_BASE(C_MQTT_EVENT_BASE);
 
+extern const uint8_t ca_crt_start[] asm("_binary_ca_crt_start");
+extern const uint8_t ca_crt_end[]   asm("_binary_ca_crt_end");
+
 enum {
     MQTT_SETUP,
     MQTT_INIT,
@@ -246,12 +249,16 @@ static void mqtt_start(){
             .address = {
                 .uri = MQTT_BROKER,
                 .port = MQTT_PORT,
-            }
+            },
+            .verification = {
+                .use_global_ca_store = false,
+                .certificate = (const char *)ca_crt_start,
+                .certificate_len = ca_crt_end - ca_crt_start,
+                .skip_cert_common_name_check = true,
+            },
         },
         .credentials = {
             .username = MQTT_USERNAME,
-            //.username = "8nyHV2MCBKKqa7Mfs6sG",
-            //.username = "0erTLZgiRFIiCzgn1AnT",
         },
         #ifdef CONFIG_MQTT_USE_LWT
         .session = {
@@ -292,11 +299,6 @@ void mqtt_stop_client(){
 void mqtt_start_client(){
     if(mqtt_client == NULL && MQTT_STATUS == MQTT_SETUP){
         MQTT_STATUS = MQTT_INIT;
-        /*
-        esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
-        esp_log_level_set("transport", ESP_LOG_DEBUG);
-        esp_log_level_set("mqtt_client", ESP_LOG_DEBUG);
-        */
         mqtt_start();
     }
 }

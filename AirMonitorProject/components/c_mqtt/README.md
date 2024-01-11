@@ -17,77 +17,33 @@ ESP_ERROR_CHECK(example_connect());
 set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
 
 
-## Hierarchy
-**NUMPLANTA/SALA/SENSOR**
+## Authentication: username & pwd
+[Tutorial](http://www.steves-internet-guide.com/mqtt-username-password-example/)
 
-| NUMPLANTA | SALA | SENSOR |
-|-----------|------|--------|
-|     2     |  3   |  TMP   |
-
-
-**VALUES**
-
-- NUMPLANTA: int
-
-- SALA: int
-
-- SENSOR: string
-
-    - TEMP: Temperatura
-
-    - HUM: Humedad
-
-    - ECO2: Calidad de aire CO2
-
-    - TVOC: Calidad de aire VOC
+| USERNAME  |    PWD   |
+|-----------|----------|
+|   user1   |   user1  |
 
 
-## CONTROL  
+## Authentication: certificate
+http://www.steves-internet-guide.com/mosquitto-tls/
+1. Generate Certificate Authority (CA):
 
-### Sensor concreto: 
+```
+openssl genpkey -algorithm RSA -out ca.key
+openssl req -x509 -new -nodes -key ca.key -sha256 -days 365 -out ca.crt
+```
 
-- Activar/Desactivar:
+2. Generate Broker Certificate:
+```
+openssl genpkey -algorithm RSA -out broker.key
+openssl req -new -key broker.key -out broker.csr -sha256
+openssl x509 -req -in broker.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out broker.crt -days 365 -sha256
+```
 
-    - Topic: NUMPLANTA/SALA/SENSOR/***ONOFF***
-    
-    - Value: 0 Desactivar, 1 Activar
-
-- Cambiar frecuencia de muestreo:
-
-    - Topic: NUMPLANTA/SALA/SENSOR/***FREQ***
-    
-    - Value: int(segundos)
-
-### General
-
-- Activar/Desactivar todos los nodos de la sala:
-
-    - Topic: NUMPLANTA/SALA/***ONOFF**
-    
-    - Value: 0 Desactivar, 1 Activar
-
-- Activar/Desactivar todos los nodos de la planta:
-
-    - Topic: NUMPLANTA/***ONOFF**
-    
-    - Value: 0 Desactivar, 1 Activar
-    
-
-## EXAMPLES
-
-**2/3/TMP**
-
-    Planta 2, sala 3, sensor temperatura
-
-**2/3/TMP/ONOFF**
-
-    Activar/Desactivar sensor de temperatura de la planta 2, sala 3.
-    Depende del valor asociado a la publicación del topic.
-    
-**2/3/QOA/FREQ**
-
-    Cambiar frecuencia de muestreo del sensor de calidad del aire de la planta 2 sala 3.
-    
-
-
-
+3. Generate Client Certificate:
+```
+openssl genpkey -algorithm RSA -out client.key
+openssl req -new -key client.key -out client.csr -sha256
+openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 365 -sha256
+```

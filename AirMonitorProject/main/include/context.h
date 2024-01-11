@@ -20,6 +20,7 @@ enum NODE_STATE_ENUM{
 
 extern int NODE_STATUS;
 extern char *NODE_TB_TOKEN;
+extern char *NODE_SW_VERSION;
 
 /**
  * @brief Check & Refresh node's current status.ç
@@ -29,15 +30,20 @@ extern char *NODE_TB_TOKEN;
 void context_refresh_node_status(int status);
 
 /**
+ * @brief Check if provided sw version ("a.b.c") is greater than current version.
+*/
+int context_check_sw_version(const char* ver);
+
+/**
  * @brief Set ThingsBoard provisioning token (and store it in NVS).
  */
-void context_set_node_tb_token(char * token);
+void context_set_tb_access_token(char * token);
 
 /**
  * @brief Get ThingsBoard provisioning token (if stored in NVS).
  * @return TOKEN or NULL
  */
-char *context_get_node_tb_token();
+char *context_get_tb_access_token();
 
 /**
  * @brief Set node floor/room context

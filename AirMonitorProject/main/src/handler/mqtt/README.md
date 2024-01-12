@@ -59,3 +59,6 @@ In order to send telemetry, the node has to be registered as an entity in TB, a 
 
 
 1. Give a copy of server.pem to your MQTT client
+1. Restart docker
+
+        docker compose up

@@ -1,5 +1,11 @@
 menu "Com MQTT Configuration"
 
+    config MQTT_USE_SECURE_VERSION
+        bool "Use MQTTS"
+        default n
+        help
+            Use MQTT over SSL
+
     config MQTT_BROKER_URL
         string "Broker URL"
         default "mqtt://test.mosquitto.org"
@@ -11,13 +17,6 @@ menu "Com MQTT Configuration"
         default 1883
         help
             Port of the broker to connect to
-
-    config MQTT_USE_SECURE_VERSION
-        bool "Use MQTTS"
-        default n
-        help
-            Activate secure version of MQTT
-
 
     # Define a configuration option to enable or disable MQTT LWT
     config MQTT_USE_LWT

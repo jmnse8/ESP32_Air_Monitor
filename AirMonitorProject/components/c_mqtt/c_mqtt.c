@@ -44,11 +44,11 @@ char *MQTT_LWT_MESSAGE = NULL;
 
 static const char *TAG = "C_MQTT";
 static char *MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
-int MQTT_PORT = 8883;
+int MQTT_PORT = CONFIG_MQTT_BROKER_PORT;
 
-#ifdef CONFIG_MQTT_USE_SECURE_VERSION
-extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
-extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
+#if CONFIG_MQTT_USE_SECURE_VERSION
+extern const uint8_t server_cert_pem_start[] asm("_binary_tb_mqtt_cert_pem_start");
+extern const uint8_t server_cert_pem_end[] asm("_binary_tb_mqtt_cert_pem_end");
 #endif
 
 
@@ -251,19 +251,22 @@ static void mqtt_start(){
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address = {
-                //.uri = MQTT_BROKER,
-                //.port = MQTT_PORT,
+                .uri = MQTT_BROKER,
+                .port = MQTT_PORT,
 
-                .uri = "mqtts://192.168.1.85",
-                .port = 8883,
+                //.uri = "mqtts://192.168.1.85",
+                //.port = CONFIG_MQTT_BROKER_PORT,
 
             },
+            #if CONFIG_MQTT_USE_SECURE_VERSION
             .verification = {
                 .use_global_ca_store = false,
                 .certificate = (const char *)ca_crt_start,
                 .certificate_len = ca_crt_end - ca_crt_start,
                 .skip_cert_common_name_check = true,
             },
+            #endif
+            
         },
         .credentials = {
             .username = MQTT_USERNAME,
@@ -272,7 +275,7 @@ static void mqtt_start(){
         .session = {
             .last_will = {
                 .topic = CONFIG_MQTT_LWT_TOPIC,
-                #ifdef CONFIG_MQTT_USE_LWT_CUSTOM_MSG
+                #if CONFIG_MQTT_USE_LWT_CUSTOM_MSG
                 .msg = CONFIG_MQTT_LWT_MESSAGE,
                 .msg_len = strlen(CONFIG_MQTT_LWT_MESSAGE),
                 #else
@@ -298,9 +301,7 @@ void mqtt_stop_client(){
         mqtt_client = NULL; // Set to NULL to avoid using a stopped client
 
         MQTT_STATUS = MQTT_SETUP;
-        MQTT_QOS = 0;
         MQTT_USERNAME = NULL;
-        MQTT_PORT = 1883;
     }
 }
 

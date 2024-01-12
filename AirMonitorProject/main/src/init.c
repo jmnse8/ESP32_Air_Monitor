@@ -48,8 +48,8 @@ void setup(){
     wifi_init();
     mqtt_init();
 
-    sntp_sync_time_init();
-    init_deep_sleep();
+    //sntp_sync_time_init();
+    //init_deep_sleep();
     si7021_init_sensor();
     //sgp30_init_sensor();
 }

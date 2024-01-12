@@ -182,7 +182,7 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
 
             //esp_mqtt_event_handle_t handler = event_data;
             struct c_mqtt_data* mqtt_data = (struct mqtt_com_data*)event_data;
-            ESP_LOGI(TAG, "MQTT Received data %s from topìc %s", mqtt_data->data, mqtt_data->topic);
+            ESP_LOGI(TAG, "MQTT Received data %s from topic %s", mqtt_data->data, mqtt_data->topic);
 
             if (mqtt_data->data_len == 0) {
                 ESP_LOGE(TAG, "\nhandler->data_len == 0\n");

@@ -1,4 +1,4 @@
-menu "Example Configuration"
+menu "Provisioning Configuration"
 
     config EXAMPLE_RESET_PROVISIONED
         bool

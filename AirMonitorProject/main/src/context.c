@@ -1,44 +1,69 @@
 #include <stdio.h>
 #include <string.h>
-
 #include "context.h"
 #include "esp_log.h"
+#include "esp_system.h"
+#include "esp_check.h"
+
 #include "c_nvs.h"
+#include "c_provisioning.h"
 
 static const char* TAG = "CONTEXT";
 
 static char *NODE_CONTEXT = NULL;
 char *NODE_TB_ACCESS_TOKEN = NULL;
+
+char *NODE_WIFI_SSID = NULL;
+char *NODE_WIFI_PWD = NULL;
+
 char* NODE_SW_VERSION = "0.0.0";
 static int NODE_ONOFF_STATUS = CONTEXT_ON;
 
-
-int NODE_STATUS = NODE_STATE_SIGUP_DEVICE2TB_STATE;
+int NODE_STATUS = NODE_STATE_SIGUP_DEVICE2TB;
 
 int context_check_sw_version(const char* ver){
     return strcmp(NODE_SW_VERSION, ver) < 0;
 }
 
-void context_refresh_node_status(int status){
-    if(status==NULL) {
-        char *token = context_get_tb_access_token();
-        if(token!=NULL){
-            NODE_STATUS = NODE_STATE_HAS_TB_TOKEN;
+void context_reset(){
+
+    if(NODE_STATUS == NODE_STATE_INVALID_DATA){
+        esp_err_t err;
+        provisioning_erase_provision_data();
+        
+        err = nvs_delete_key(CONFIG_NVS_KEY_TB_CTX);
+        if( err != ESP_OK ){
+            ESP_LOGE(TAG, "Could not erase CONFIG_NVS_KEY_TB_CTX");
         }
-        else{
-            NODE_STATUS = NODE_STATE_SIGUP_DEVICE2TB_STATE;
+        //reset
+        esp_restart();
+    }
+}
+
+
+int context_refresh_node_status(int status){
+    if(status==NULL) {
+        NODE_STATUS = NODE_STATE_PROV;
+        //char *wifi_ssid = context_get_wifi_ssid();
+        //char *wifi_pwd = context_get_wifi_pwd();
+        if(provisioning_is_provisioned()){
+            NODE_STATUS = NODE_STATE_HAS_WIFI_CREDENTIALS;
+            char *token = context_get_tb_access_token();
+
+            if(token!=NULL){
+                NODE_STATUS = NODE_STATE_HAS_TB_TOKEN;
+            }
+            else{
+                NODE_STATUS = NODE_STATE_SIGUP_DEVICE2TB;
+            }
         }
     }
     else {
-        if(status==NODE_STATE_BLANK
-            || status==NODE_STATE_PROV_WIFI
-            || status==NODE_STATE_SIGUP_DEVICE2TB_STATE
-            || status==NODE_STATE_HAS_TB_TOKEN
-            || status==NODE_STATE_REGULAR){
-                NODE_STATUS = status;
-            }
+        if(status >= 0){
+            NODE_STATUS = status%NODE_CONTROL_PARSE;
+        }
     }
-    
+    return NODE_STATUS;
 }
 
 
@@ -46,7 +71,7 @@ void context_set_tb_access_token(char * token){
     printf("---------------------\n");
     printf("TOKEN = %s size %d\n", token, strlen(token));
     printf("---------------------\n");
-    if(NODE_STATUS == NODE_STATE_SIGUP_DEVICE2TB_STATE){
+    if(NODE_STATUS == NODE_STATE_SIGUP_DEVICE2TB){
         if(nvs_write_string(CONFIG_NVS_KEY_TB_TOKEN, token)!= NVS_OK){
             ESP_LOGE(TAG, "COULDN'T WRITE THE TOKEN %s WITH KEY %s", token, CONFIG_NVS_KEY_TB_TOKEN);
         } else {

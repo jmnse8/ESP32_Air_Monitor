@@ -24,11 +24,7 @@
 
 #include "c_mqtt.h"
 
-
 ESP_EVENT_DEFINE_BASE(C_MQTT_EVENT_BASE);
-
-extern const uint8_t ca_crt_start[] asm("_binary_tb_mqtt_cert_pem_start");
-extern const uint8_t ca_crt_end[]   asm("_binary_tb_mqtt_cert_pem_end");
 
 enum {
     MQTT_SETUP,
@@ -37,13 +33,13 @@ enum {
     MQTT_ERR
 };
 
+static const char *TAG = "C_MQTT";
+
 int MQTT_STATUS = MQTT_SETUP;
 int MQTT_QOS = 0;
 char *MQTT_USERNAME = NULL;
 char *MQTT_LWT_MESSAGE = NULL;
-
-static const char *TAG = "C_MQTT";
-static char *MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
+char *MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
 int MQTT_PORT = CONFIG_MQTT_BROKER_PORT;
 
 #if CONFIG_MQTT_USE_SECURE_VERSION
@@ -109,7 +105,10 @@ int mqtt_set_lwt_msg(char *msg){
 
 int mqtt_set_broker(char *broker){
     if(MQTT_STATUS == MQTT_SETUP){
-        MQTT_BROKER = broker;
+        int len = strlen(broker);
+        MQTT_BROKER = (char *)malloc((len + 1)*sizeof(char));
+        strncpy(MQTT_BROKER, broker, len);
+        MQTT_BROKER[len] = '\0';
         return 0;
     }
     return 1;
@@ -246,23 +245,19 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-static void mqtt_start(){
+static void _mqtt_start(){
 
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address = {
                 .uri = MQTT_BROKER,
                 .port = MQTT_PORT,
-
-                //.uri = "mqtts://192.168.1.85",
-                //.port = CONFIG_MQTT_BROKER_PORT,
-
             },
             #if CONFIG_MQTT_USE_SECURE_VERSION
             .verification = {
                 .use_global_ca_store = false,
-                .certificate = (const char *)ca_crt_start,
-                .certificate_len = ca_crt_end - ca_crt_start,
+                .certificate = (const char *)server_cert_pem_start,
+                .certificate_len = server_cert_pem_end - server_cert_pem_start,
                 .skip_cert_common_name_check = true,
             },
             #endif
@@ -305,9 +300,22 @@ void mqtt_stop_client(){
     }
 }
 
+static void _init_broker(){
+    #if CONFIG_MQTT_USE_SECURE_VERSION
+    char * prefix = "mqtts";
+    #else
+    char * prefix = "mqtt";
+    #endif
+
+    char broker_url[50];
+    snprintf(broker_url, 50, "%s://%s", prefix, MQTT_BROKER);
+    mqtt_set_broker(broker_url);
+}
+
 void mqtt_start_client(){
     if(mqtt_client == NULL && MQTT_STATUS == MQTT_SETUP){
+        _init_broker();
         MQTT_STATUS = MQTT_INIT;
-        mqtt_start();
+        _mqtt_start();
     }
 }

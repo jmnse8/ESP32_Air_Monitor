@@ -20,10 +20,14 @@
 
 #include "mqtt_handler.h"
 #include "sensor_handler.h"
-
+#include "provisioning_handler.h"
 
 
 static void init_event_handlers(){
+
+    //Provisioning
+    ESP_ERROR_CHECK(esp_event_handler_register(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CONNECTED, provisioning_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CUSTOM_DATA, provisioning_handler, NULL));
 
     //MQTT
     ESP_ERROR_CHECK(esp_event_handler_register(C_MQTT_EVENT_BASE, C_MQTT_EVENT_CONNECTED, mqtt_handler, NULL));
@@ -44,16 +48,23 @@ void setup(){
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    context_refresh_node_status(NULL);
-
+    int status = context_refresh_node_status(NULL);
     init_event_handlers();
-    provisioning_init();
-    //wifi_init();
-    mqtt_init();
+
+    if(status==NODE_STATE_PROV){
+        provisioning_init();
+
+    }else{
+        wifi_init();
+        mqtt_init();
+        si7021_init_sensor();
+    }
+
+    
+    
 
     //sntp_sync_time_init();
     //init_deep_sleep();
-    si7021_init_sensor();
     //sgp30_init_sensor();
     
 }

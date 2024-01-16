@@ -27,7 +27,7 @@ static void freq_topic_handler(char *data){
 }
 
 
-static void onoff_topic_handler(char *data){
+static void _onoff_topic_handler(char *data){
     switch (parse_params_bool_value(data)) {
         case 0:
             ESP_LOGI(TAG, "SENSOR OFF");
@@ -54,7 +54,14 @@ static void _start_with_tb_token(char *token){
     mqtt_stop_client();
     mqtt_set_qos(1);
     mqtt_set_username(token);
-    mqtt_set_lwt_msg(context_get_node_ctx());
+    //mqtt_set_lwt_msg(context_get_node_ctx());
+
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddBoolToObject(root, "alive", 0);
+    cJSON_AddStringToObject(root, "reason", "LWT - Node disconnected");
+    char *data = cJSON_Print(root);
+
+    mqtt_set_lwt_msg(data);
     mqtt_start_client();
     context_refresh_node_status(NODE_STATE_REGULAR);
 }
@@ -91,11 +98,11 @@ static void _on_connected(){
             //https://thingsboard.io/docs/reference/mqtt-api/
             mqtt_subscribe_to_topic("v1/devices/me/attributes/response/+");
             mqtt_subscribe_to_topic("v1/devices/me/attributes");
+            
             mqtt_subscribe_to_topic("v2/sw/response/+");
-            mqtt_subscribe_to_topic("v2/sw/response/+/chunk/+");
-
+            //mqtt_subscribe_to_topic("v2/sw/response/+/chunk/+");
             mqtt_subscribe_to_topic("v2/fw/response/+");
-            mqtt_subscribe_to_topic("v2/fw/response/+/chunk/+");
+            //mqtt_subscribe_to_topic("v2/fw/response/+/chunk/+");
             #ifdef CONFIG_MQTT_LWT_TOPIC
             mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
             #endif
@@ -107,6 +114,20 @@ static void _on_connected(){
     }
 }
 
+
+static void _get_onoff_status(char * request_id){
+    int onoff = context_get_onoff();
+
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddBoolToObject(root, "onoff", onoff);
+
+    char *data = cJSON_Print(root);
+    mqtt_publish_to_topic(build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
+
+    free((void*)data);
+    free(request_id);
+    cJSON_Delete(root);
+}
 
 
 void rpc_request_handler(struct c_mqtt_data* mqtt_data){
@@ -123,27 +144,13 @@ void rpc_request_handler(struct c_mqtt_data* mqtt_data){
             request_id = mqtt_topic_last_token(mqtt_data->topic);
             handler_set_sensor_stat(mqtt_data->data, build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id));
             free(request_id);
-
         break;
         case MQTT_GET_ONOFF_TOPIC:
-            request_id = mqtt_topic_last_token(mqtt_data->topic);
-            int onoff = context_get_onoff();
-
-            cJSON *root = cJSON_CreateObject();
-            cJSON_AddBoolToObject(root, "onoff", onoff);
-
-            char *data = cJSON_Print(root);
-            mqtt_publish_to_topic(build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
-
-            free((void*)data);
-            free(request_id);
-            cJSON_Delete(root);
-
+            _get_onoff_status(mqtt_topic_last_token(mqtt_data->topic));
         break;
         case MQTT_SET_ONOFF_TOPIC:
-            onoff_topic_handler(mqtt_data->data);
+            _onoff_topic_handler(mqtt_data->data);
             break;
-
         default:
             ESP_LOGE(TAG, "UNKNOWN RPC REQUEST: \nTOPIC=%s\nDATA=%s", mqtt_data->topic, mqtt_data->data);
         break;

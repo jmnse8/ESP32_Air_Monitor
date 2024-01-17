@@ -150,6 +150,7 @@ int char2bool(char c){
 void handler_set_publish_frequency(int freq){
     SENSOR_PUB_FREQ = freq;
     printf("\nSENSOR_PUB_FREQ = %d\n", SENSOR_PUB_FREQ);
+    //TODO: Implementa la funcion para cambiar el timer de envío aqui
 }
 
 void handler_get_sensor_stat(char *request_id){

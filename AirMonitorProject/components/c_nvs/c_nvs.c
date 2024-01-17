@@ -105,6 +105,31 @@ static int _nvs_read_string(char *key, char **str){
     return ret;
 }
 
+static int _nvs_delete_key(char *key){
+    _nvs_open_storage();
+
+    int ret = NVS_ERR;
+    esp_err_t err = nvs_erase_key(_nvs_handle, key);
+    if(err == ESP_OK){
+        ESP_LOGI(TAG, "Se ha borrado la clave: %s", key);
+        err = nvs_commit(_nvs_handle);
+        if(err == ESP_OK){
+            ESP_LOGI(TAG, "COMMITED IN NVS");
+            ret = NVS_OK;
+        }
+        else{
+            ESP_LOGE(TAG, "FAILED TO COMMIT IN NVS");
+        }
+    }
+    else{
+        ESP_LOGE(TAG, "Ha fallado en borrarla clave: %s", key);
+    }
+    
+    nvs_close(_nvs_handle);
+
+    return ret;
+}
+
 void nvs_init(){
     _nvs_init();
 }
@@ -115,4 +140,8 @@ int nvs_write_string(char *key, char *value){
 
 int nvs_read_string(char *key, char **str){
     return _nvs_read_string(key, str);
+}
+
+int nvs_delete_key(char *key){
+    return _nvs_delete_key(key);
 }

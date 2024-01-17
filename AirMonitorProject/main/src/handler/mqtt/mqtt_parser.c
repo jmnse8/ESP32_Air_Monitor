@@ -118,7 +118,7 @@ static int _parse_method(char *topic){
         return MQTT_SET_CTX;
     } 
     else if (strcmp(topic, "FREQ") == 0) {
-        return MQTT_SET_FREQ_TOPIC;
+        return MQTT_GET_FREQ_TOPIC;
     } 
     else if (strcmp(topic, "ONOFF") == 0){
         return MQTT_SET_ONOFF_TOPIC;

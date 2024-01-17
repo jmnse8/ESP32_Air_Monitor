@@ -24,4 +24,9 @@ int nvs_write_string(char *key, char *value);
 */
 int nvs_read_string(char *key, char **str);
 
+/**
+ * @brief Erase the key-value pair
+*/
+int nvs_delete_key(char *key);
+
 #endif

@@ -38,22 +38,20 @@ void sensorSI7021_event_handler(void* handler_args, esp_event_base_t base, int32
    
     float value = *((float*)event_data);
     cJSON *root = cJSON_CreateObject();
-    CoapDataType type;
+
     if(id==SENSORSI7021_HUM_DATA){
         ESP_LOGI(TAG, "HUM: %f",  value);
         //cJSON_AddNumberToObject(root, "humidity", value);
         cJSON_AddStringToObject(root, "humidity", float2str(value, 2));
-        type = C_COAP_SEND_HUM;
     }
     else{
         ESP_LOGI(TAG, "TEMP: %f",  value);
         //cJSON_AddNumberToObject(root, "temperature", value);
         cJSON_AddStringToObject(root, "temperature", float2str(value, 2));
-        type = C_COAP_SEND_TEMP;
     }
     char *data = cJSON_Print(root);
     //mqtt_publish_to_topic(CONFIG_TB_TELEMETRY_TOPIC, (uint8_t*)data, strlen(data));
-    coap_send_data(data, type);
+    coap_send_data(data);
 
     free((void*)data);
     cJSON_Delete(root);
@@ -63,21 +61,18 @@ void sensorSGP30_event_handler(void* handler_args, esp_event_base_t base, int32_
    
     uint16_t value = *((uint16_t*)event_data);
     cJSON *root = cJSON_CreateObject();
-    CoapDataType type;
     
     if(id==SENSORSGP30_TVOC_DATA){
         ESP_LOGI(TAG, "TVOC: %d",  value);
         cJSON_AddStringToObject(root, "tvoc", float2str(value, 2));
-        type = C_COAP_SEND_TVOC;
     }
     else{
         ESP_LOGI(TAG, "ECO2: %d",  value);
         cJSON_AddStringToObject(root, "eco2", float2str(value, 2));
-        type = C_COAP_SEND_CO2;
     }
     char *data = cJSON_Print(root);
     //mqtt_publish_to_topic(CONFIG_TB_TELEMETRY_TOPIC, (uint8_t*)data, strlen(data));
-    coap_send_data(data, type);
+    coap_send_data(data);
 
     free((void*)data);
     cJSON_Delete(root);

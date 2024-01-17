@@ -7,9 +7,22 @@
 
 char *get_access_token_TB_responseC(char *payload);
 static void _get_access_token_TB(char *payload);
+char * build_TB_prov_request();
 
 void coap_init(){
     coap_start_client();
+    char * token = context_get_node_tb_token();
+    //ESP_LOGI("pepe", "%s", token);
+    if (token == NULL) {
+        ESP_LOGI("coapHND", "El token de nvs era nulo");
+        coap_client_provision_send(build_TB_prov_request());
+        //ESP_LOGI("pepe", "holaaa2");
+    }
+    else {
+        ESP_LOGI("coapHND", "El token de nvs NO era nulo %s", token);
+        save_device_token(token);
+    }
+    free(token);
 }
 
 void coap_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data) {
@@ -45,3 +58,14 @@ char *get_access_token_TB_responseC(char *payload){
     cJSON_Delete(root);
     return acc_token;
 }
+
+char * build_TB_prov_request(){
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "deviceName", "esp32Coap5");
+    cJSON_AddStringToObject(root, "provisionDeviceKey", "d01bk1lk8fsi5gr67xdl");
+    cJSON_AddStringToObject(root, "provisionDeviceSecret", "5kln5xcz73euzgecvu6o");
+
+    char *data = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    return data;
+} 

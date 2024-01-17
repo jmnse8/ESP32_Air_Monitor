@@ -51,8 +51,8 @@ void setup(){
     //mqtt_init();
     coap_init();
 
-    sntp_sync_time_init();
+    //sntp_sync_time_init();
     si7021_init_sensor();
-    sgp30_init_sensor();
+    //sgp30_init_sensor();
 }
 

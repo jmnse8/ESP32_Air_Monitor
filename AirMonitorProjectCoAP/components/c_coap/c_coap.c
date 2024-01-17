@@ -1,34 +1,56 @@
-#include <stdio.h>
+ #include <stdio.h>
 #include <string.h>
 #include <netdb.h>
 #include "esp_log.h"
 #include "c_coap.h"
 
 #include <coap3/coap.h>
+/*
+#include <string.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <sys/param.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/event_groups.h>
+#include <esp_log.h>
+#include <esp_event.h>
+#include <lwip/sockets.h>
+#include <coap3/coap.h>
+#include "c_coap.h"*/
 
 static const char *TAG = "C_COAP";
 ESP_EVENT_DEFINE_BASE(C_COAP_EVENT_BASE);
 
-coap_context_t *ctx = NULL;
-coap_session_t *session = NULL;
-char *DEVICE_TOKEN = NULL;
+static coap_uri_t uri;
+static coap_context_t *ctx = NULL;
+static coap_session_t *session = NULL;
+//static coap_optlist_t *optlist = NULL;
 
-//static coap_optlist_t *optlist_general = NULL;
+static char *DEVICE_TOKEN = NULL;
 
-char *device_token;
+static unsigned char tokenProvision[8]  = {0};
 
-static coap_session_t * coap_start_pki_session(coap_context_t *ctx, coap_address_t *dst_addr, coap_uri_t *uri);
+//extern uint8_t ca_pem_start[] asm("_binary_coap_pem_start");
+//extern uint8_t ca_pem_end[]   asm("_binary_coap_pem_end");
+
+//static coap_session_t * coap_start_pki_session(coap_context_t *ctx, coap_address_t *dst_addr, coap_uri_t *uri);
 static void coap_io_process_callback();
 static coap_address_t *coap_get_address(coap_uri_t *uri);
 static void coap_log_handler (coap_log_t level, const char *message);
 static coap_response_t message_handler(coap_session_t *session, const coap_pdu_t *sent, const coap_pdu_t *received, const coap_mid_t mid);
-esp_err_t coap_client_provision_send();
 
 void coap_start_client(){
-    coap_address_t   *dst_addr;
-    static coap_uri_t uri;
-    const char       *server_uri = "coaps://" CONFIG_COAP_HOST_NAME ":5684";
+    char       *server_uri = NULL;// = "coaps://" CONFIG_COAP_HOST_NAME ":5684";
 
+    /* if (!coap_dtls_is_supported()) {
+        ESP_LOGE(TAG, "Coap DTLS not supported");
+    } */
+
+    server_uri = malloc(256);
+    sprintf(server_uri, "coap://%s", CONFIG_COAP_HOST_NAME);
+
+    
     /* Set up the CoAP logging */
     coap_set_log_handler(coap_log_handler);
     coap_set_log_level(COAP_LOG_DEBUG);
@@ -42,33 +64,28 @@ void coap_start_client(){
     //coap_context_set_block_mode(ctx, COAP_BLOCK_USE_LIBCOAP|COAP_BLOCK_SINGLE_BODY);
 
     coap_register_response_handler(ctx, message_handler);
+    xTaskCreate(coap_io_process_callback, "coap_io_process task", 6144, NULL, 6, NULL);
 
     if (coap_split_uri((const uint8_t *)server_uri, strlen(server_uri), &uri) == -1) {
         ESP_LOGE(TAG, "CoAP server uri error");
         //goto clean_up;
     }
-    //if (!coap_build_optlist(&uri))
-    //    goto clean_up;
-
-    dst_addr = coap_get_address(&uri);
+    
+    coap_address_t *dst_addr = coap_get_address(&uri);
     //if (!dst_addr)
         //goto clean_up;
 
-    session = coap_start_pki_session(ctx, dst_addr, &uri);
+    session = coap_new_client_session(ctx, NULL, dst_addr,
+                                          uri.scheme == COAP_URI_SCHEME_COAP_TCP ? COAP_PROTO_TCP :
+                                          COAP_PROTO_UDP);//coap_start_pki_session(ctx, dst_addr, &uri);
 
     if (!session) {
         ESP_LOGE(TAG, "coap_new_client_session() failed");
         //goto clean_up;
     }
-
-    xTaskCreate(coap_io_process_callback, "coap_io_process task", 6144, NULL, 5, NULL);
-
-    //TODO: sacar porque si ya esta provisionado no hacer
-    coap_client_provision_send();
-
 }
 
-static coap_optlist_t *generate_optlist(char *device_token, CoapDataType type) {
+static coap_optlist_t *generate_optlist(char *device_token) {
     coap_optlist_t *aux_optlist = NULL;
 
     u_char buf[4];
@@ -76,29 +93,11 @@ static coap_optlist_t *generate_optlist(char *device_token, CoapDataType type) {
 
     char uri[100];
     strcpy(uri, "api/v1/");
-    strcpy(uri, device_token);
-    switch (type) {
-        case C_COAP_SEND_TEMP:
-            strcat(uri, "/temp");
-            //coap_insert_optlist(&optlist_general, coap_make_option(URI_PATH, strlen("temperature"), (const uint8_t *)"temperature"));
-            break;
-
-        case C_COAP_SEND_HUM:
-            strcat(uri, "/hum");
-            //coap_insert_optlist(&optlist_general, coap_make_option(URI_PATH, strlen("humidity"), (const uint8_t *)"humidity"));
-            break;
-
-        case C_COAP_SEND_CO2:
-            strcat(uri, "/co2");
-            //coap_insert_optlist(&optlist_general, coap_make_option(URI_PATH, strlen("co2"), (const uint8_t *)"co2"));
-            break;
-
-        case C_COAP_SEND_TVOC:
-            strcat(uri, "/tvoc");
-            //coap_insert_optlist(&optlist_general, coap_make_option(URI_PATH, strlen("tvoc"), (const uint8_t *)"tvoc"));
-            break;
-    }
+    strcat(uri, device_token);
+    strcat(uri, "/telemetry");
+    ESP_LOGI(TAG, "COAP telemetry URI: %s", uri);
     coap_insert_optlist(&aux_optlist, coap_new_optlist(COAP_OPTION_URI_PATH, strlen(uri), (const uint8_t *)uri));
+    
     return aux_optlist;
 }
 
@@ -113,13 +112,17 @@ void coap_stop_client(){
 }
 
 void save_device_token(char *device_token){
-
+    DEVICE_TOKEN  = strdup(device_token);
 }
 
-
-
 //Publish some data
-int coap_send_data(char *data, CoapDataType type) {
+int coap_send_data(char *data) {
+    ESP_LOGI(TAG, "Voy a mandar %s", data);
+    if(DEVICE_TOKEN == NULL){
+        ESP_LOGE(TAG, "El token todavia es null");
+        return 1;
+    }
+
     size_t tokenlength;
     unsigned char token[8];
     coap_pdu_t *request = NULL;
@@ -133,7 +136,7 @@ int coap_send_data(char *data, CoapDataType type) {
     coap_session_new_token(session, &tokenlength, token);
     coap_add_token(request, tokenlength, token);
 
-    coap_optlist_t* optlistsend = generate_optlist(DEVICE_TOKEN, type);
+    coap_optlist_t* optlistsend = generate_optlist(DEVICE_TOKEN);
     coap_add_optlist_pdu(request, &optlistsend);
 
     coap_add_data(request, strlen(data), (unsigned char*) data);
@@ -146,51 +149,89 @@ int coap_send_data(char *data, CoapDataType type) {
     //return ESP_OK;
 }
 
+static coap_response_t message_handler(coap_session_t *session, const coap_pdu_t *sent, const coap_pdu_t *received, const coap_mid_t mid) {
+    ESP_LOGI(TAG, "Me ha llegado algo");
+    const unsigned char *data = NULL;
+    size_t data_len;
+    size_t offset;
+    size_t total;
+    coap_pdu_code_t rcvd_code = coap_pdu_get_code(received);
+
+    if (COAP_RESPONSE_CLASS(rcvd_code) == 2) {
+        if (coap_get_data_large(received, &data_len, &data, &offset, &total)) {
+            if (data_len != total) {
+                printf("---Unexpected partial data received offset %u, length %u\n", offset, data_len);
+            }
+            printf("***Received:\n%.*s\n", (int)data_len, data);
+            coap_bin_const_t token = coap_pdu_get_token(received);
+            if (memcmp(token.s, tokenProvision, token.length) == 0) {
+                ESP_LOGI(TAG, "el token era igual (%d bytes):\n%.*s\n", data_len, (int)data_len, data);
+
+                // Post the event
+                esp_event_post(C_COAP_EVENT_BASE, C_COAP_EVENT_RECEIVED_DATA, data, (int)data_len, 0);
+            }
+        }
+        return COAP_RESPONSE_OK;
+    }
+    else {
+        ESP_LOGI(TAG, "Received COAP message desde else (%d bytes):\n%.*s\n", data_len, (int)data_len, data);
+
+    }
+    return COAP_RESPONSE_OK;
+}
+
+esp_err_t coap_client_provision_send(char * data) {
+    size_t tokenlength;
+    coap_pdu_t *request = NULL;
+
+    request = coap_new_pdu(COAP_MESSAGE_CON, COAP_REQUEST_CODE_POST, session);
+    if (!request) {
+        ESP_LOGE(TAG, "Error en coap_new_pdu()");
+        return ESP_FAIL;
+    }
+    
+    /* Add in an unique token */
+    coap_session_new_token(session, &tokenlength, tokenProvision);
+    if (coap_add_token(request, tokenlength, tokenProvision) == 0) {
+        ESP_LOGE(TAG, "Error en coap_add_token()");
+        return ESP_FAIL;
+    }
+
+    char *provision_path = "api/v1/provision";
+    if (coap_add_option(request, COAP_OPTION_URI_PATH, strlen(provision_path), (u_char*) provision_path) == 0) {
+        ESP_LOGE(TAG, "Error en coap_add_option()");
+        return ESP_FAIL;
+    }
+
+    if (coap_add_data(request, strlen(data), (unsigned char*) data) == 0) {
+        ESP_LOGE(TAG, "Error en coap_add_data_large_request()");
+        return ESP_FAIL;
+    }
+
+    if (coap_send(session, request) == COAP_INVALID_MID) {
+        ESP_LOGE(TAG, "Error en coap_send()");
+        return ESP_FAIL;
+    }
+    return ESP_OK;
+}
+
 static void coap_io_process_callback() {
     while (true) {
-        coap_io_process(ctx, 30000);
+        coap_io_process(ctx, 2000);
     }
 }
 
-static coap_session_t * coap_start_pki_session(coap_context_t *ctx, coap_address_t *dst_addr, coap_uri_t *uri)
-{
-    unsigned int ca_pem_bytes = 0;//ca_pem_end - ca_pem_start;
-    //unsigned int client_crt_bytes = client_crt_end - client_crt_start;
-    //unsigned int client_key_bytes = client_key_end - client_key_start;
-    static coap_dtls_pki_t dtls_pki;
+static void coap_log_handler (coap_log_t level, const char *message) {
+    uint32_t esp_level = ESP_LOG_INFO;
+    char *cp = strchr(message, '\n');
 
-    memset (&dtls_pki, 0, sizeof(dtls_pki));
-    dtls_pki.version = COAP_DTLS_PKI_SETUP_VERSION;
-
-    dtls_pki.verify_peer_cert        = 1;
-    dtls_pki.check_common_ca         = 1;
-    dtls_pki.allow_self_signed       = 1;
-    dtls_pki.allow_expired_certs     = 1;
-    dtls_pki.cert_chain_validation   = 1;
-    dtls_pki.cert_chain_verify_depth = 2;
-    dtls_pki.check_cert_revocation   = 1;
-    dtls_pki.allow_no_crl            = 1;
-    dtls_pki.allow_expired_crl       = 1;
-    dtls_pki.allow_bad_md_hash       = 1;
-    dtls_pki.allow_short_rsa_length  = 1;
-    //dtls_pki.validate_cn_call_back   = verify_cn_callback;
-    dtls_pki.cn_call_back_arg        = NULL;
-    dtls_pki.validate_sni_call_back  = NULL;
-    dtls_pki.sni_call_back_arg       = NULL;
-    //memset(client_sni, 0, sizeof(client_sni));
-    //memcpy(client_sni, uri->host.s, MIN(uri->host.length, sizeof(client_sni)));
-    
-    //dtls_pki.client_sni = client_sni;
-    
-    dtls_pki.pki_key.key_type = COAP_PKI_KEY_PEM_BUF;
-    dtls_pki.pki_key.key.pem_buf.ca_cert = 0;//ca_pem_start;
-    dtls_pki.pki_key.key.pem_buf.ca_cert_len = ca_pem_bytes;
-
-    return coap_new_client_session_pki(ctx, NULL, dst_addr, COAP_PROTO_DTLS, &dtls_pki);
+    if (cp)
+        ESP_LOG_LEVEL(esp_level, TAG, "%.*s", (int)(cp-message), message);
+    else
+        ESP_LOG_LEVEL(esp_level, TAG, "%s", message);
 }
 
-static coap_address_t *coap_get_address(coap_uri_t *uri)
-{
+static coap_address_t *coap_get_address(coap_uri_t *uri) {
   static coap_address_t dst_addr;
     char *phostname = NULL;
     struct addrinfo hints;
@@ -244,84 +285,41 @@ static coap_address_t *coap_get_address(coap_uri_t *uri)
     return &dst_addr;
 }
 
-static coap_response_t message_handler(coap_session_t *session, const coap_pdu_t *sent, const coap_pdu_t *received, const coap_mid_t mid)
+/*
+static coap_session_t * coap_start_pki_session(coap_context_t *ctx, coap_address_t *dst_addr, coap_uri_t *uri)
 {
-    const unsigned char *data = NULL;
-    size_t data_len;
-    size_t offset;
-    size_t total;
-    coap_pdu_code_t rcvd_code = coap_pdu_get_code(received);
+    unsigned int ca_pem_bytes = ca_pem_end - ca_pem_start;
 
-    if (COAP_RESPONSE_CLASS(rcvd_code) == 2) {
-        if (coap_get_data_large(received, &data_len, &data, &offset, &total)) {
-            if (data_len != total) {
-                printf("Unexpected partial data received offset %u, length %u\n", offset, data_len);
-            }
-            printf("Received:\n%.*s\n", (int)data_len, data);
-            // Post the event
-            esp_event_post(C_COAP_EVENT_BASE, C_COAP_EVENT_RECEIVED_DATA, data, (int)data_len, 0);
-        }
-        return COAP_RESPONSE_OK;
-    }
-    printf("%d.%02d", (rcvd_code >> 5), rcvd_code & 0x1F);
-    if (coap_get_data_large(received, &data_len, &data, &offset, &total)) {
-        printf(": ");
-        while(data_len--) {
-            printf("%c", isprint(*data) ? *data : '.');
-            data++;
-        }
-    }
-    printf("\n");
-    return COAP_RESPONSE_OK;
-}
+    //unsigned int client_crt_bytes = client_crt_end - client_crt_start;
+    //unsigned int client_key_bytes = client_key_end - client_key_start;
+    static coap_dtls_pki_t dtls_pki;
 
-static void coap_log_handler (coap_log_t level, const char *message) {
-    uint32_t esp_level = ESP_LOG_INFO;
-    char *cp = strchr(message, '\n');
+    memset (&dtls_pki, 0, sizeof(dtls_pki));
+    dtls_pki.version = COAP_DTLS_PKI_SETUP_VERSION;
 
-    if (cp)
-        ESP_LOG_LEVEL(esp_level, TAG, "%.*s", (int)(cp-message), message);
-    else
-        ESP_LOG_LEVEL(esp_level, TAG, "%s", message);
-}
-
-
-esp_err_t coap_client_provision_send() {
-
-    size_t tokenlength;
-    unsigned char token[8];
-    coap_pdu_t *request = NULL;
-
-    char *content = "{}";
-
-    request = coap_new_pdu(COAP_MESSAGE_CON, COAP_REQUEST_CODE_POST, session);
-    if (!request) {
-        ESP_LOGE(TAG, "Error en coap_new_pdu()");
-        return ESP_FAIL;
-    }
+    dtls_pki.verify_peer_cert        = 1;
+    //dtls_pki.check_common_ca         = 1;
+    dtls_pki.allow_self_signed       = 1;
+    dtls_pki.allow_expired_certs     = 1;
+    dtls_pki.cert_chain_validation   = 1;
+    dtls_pki.cert_chain_verify_depth = 3;
+    //dtls_pki.check_cert_revocation   = 1;
+    //dtls_pki.allow_no_crl            = 1;
+    //dtls_pki.allow_expired_crl       = 1;
+    //dtls_pki.allow_bad_md_hash       = 1;
+    //dtls_pki.allow_short_rsa_length  = 1;
+    //dtls_pki.validate_cn_call_back   = verify_cn_callback;
+    //dtls_pki.cn_call_back_arg        = NULL;
+    //dtls_pki.validate_sni_call_back  = NULL;
+    //dtls_pki.sni_call_back_arg       = NULL;
+    //memset(client_sni, 0, sizeof(client_sni));
+    //memcpy(client_sni, uri->host.s, MIN(uri->host.length, sizeof(client_sni)));
     
-    /* Add in an unique token */
-    coap_session_new_token(session, &tokenlength, token);
-    if (coap_add_token(request, tokenlength, token) == 0) {
-        ESP_LOGE(TAG, "Error en coap_add_token()");
-        return ESP_FAIL;
-    }
+    //dtls_pki.client_sni = client_sni;
+    
+    dtls_pki.pki_key.key_type = COAP_PKI_KEY_PEM_BUF;
+    dtls_pki.pki_key.key.pem_buf.ca_cert = ca_pem_start;
+    dtls_pki.pki_key.key.pem_buf.ca_cert_len = ca_pem_bytes;
 
-    char *provision_path = "api/v1/provision";
-    if (coap_add_option(request, COAP_OPTION_URI_PATH, strlen(provision_path), (u_char*) provision_path) == 0) {
-        ESP_LOGE(TAG, "Error en coap_add_option()");
-        return ESP_FAIL;
-    }
-
-    if (coap_add_data(request, strlen(content), (unsigned char*) content) == 0) {
-        ESP_LOGE(TAG, "Error en coap_add_data_large_request()");
-        return ESP_FAIL;
-    }
-
-    if (coap_send(session, request) == COAP_INVALID_MID) {
-        ESP_LOGE(TAG, "Error en coap_send()");
-        return ESP_FAIL;
-    }
-
-    return ESP_OK;
-}
+    return coap_new_client_session_pki(ctx, NULL, dst_addr, COAP_PROTO_DTLS, &dtls_pki);
+}*/

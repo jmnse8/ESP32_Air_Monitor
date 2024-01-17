@@ -7,6 +7,8 @@
 
 static const char* TAG = "SENSOR_HANDLER";
 
+static int SENSOR_PUB_FREQ = 10;
+
 enum TB_SENSOR_PIN {
     TB_SENSOR_PIN_TMP = 1,
     TB_SENSOR_PIN_HUM = 2,
@@ -142,6 +144,12 @@ int char2bool(char c){
         return 1;
     }
     return 0;
+}
+
+
+void handler_set_publish_frequency(int freq){
+    SENSOR_PUB_FREQ = freq;
+    printf("\nSENSOR_PUB_FREQ = %d\n", SENSOR_PUB_FREQ);
 }
 
 void handler_get_sensor_stat(char *request_id){

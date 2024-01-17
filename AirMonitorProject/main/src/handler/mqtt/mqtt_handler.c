@@ -98,6 +98,9 @@ static void _on_connected(){
             //https://thingsboard.io/docs/reference/mqtt-api/
             mqtt_subscribe_to_topic("v1/devices/me/attributes/response/+");
             mqtt_subscribe_to_topic("v1/devices/me/attributes");
+
+            mqtt_subscribe_to_topic("v1/devices/me/rpc/response/+");
+            mqtt_subscribe_to_topic("v1/devices/me/rpc/request/+");
             
             mqtt_subscribe_to_topic("v2/sw/response/+");
             //mqtt_subscribe_to_topic("v2/sw/response/+/chunk/+");
@@ -157,9 +160,26 @@ void rpc_request_handler(struct c_mqtt_data* mqtt_data){
     }
 }
 
+static int _frequency_handler(char * payload){
+    int res = MQTT_INVALID_VALUE;
 
+    cJSON* root = cJSON_Parse(payload);
+    if (root != NULL){
+        cJSON *publish_frequencyItem = cJSON_GetObjectItem(root, "publish_frequency");
 
-void attributes_handler(char * payload){
+        if(publish_frequencyItem!=NULL){
+            handler_set_publish_frequency(publish_frequencyItem->valueint);
+            res = MQTT_SET_PUB_FREQ_TOPIC;
+        }
+    }
+    cJSON_Delete(root);
+    return res;
+}
+
+static int _ota_update_handler(char * payload){
+    
+    int res = MQTT_INVALID_VALUE;
+
     cJSON* root = cJSON_Parse(payload);
     if (root != NULL){
         cJSON *sw_titleItem = cJSON_GetObjectItem(root, "sw_title");
@@ -167,11 +187,28 @@ void attributes_handler(char * payload){
 
         if(sw_titleItem!=NULL || fw_titleItem!=NULL){
             printf("\nES OTA\n");
-            //Es  actualizacion de sw (OTA)
+            res = MQTT_OTA_UPDATE_SETUP;
             ota_incoming_update_handler(payload);
+        }else{
+            cJSON *deletedItem = cJSON_GetObjectItem(root, "deleted");
+            if(deletedItem!=NULL){
+                res = MQTT_OK;
+            }
         }
     }
     cJSON_Delete(root);
+    return res;
+}
+
+
+
+void attributes_handler(char * payload){
+    if(_ota_update_handler(payload)==MQTT_INVALID_VALUE){
+        if(_frequency_handler(payload)==MQTT_INVALID_VALUE){
+
+            ESP_LOGE(TAG, "UNKNOWN ATTRIBUTE REQUEST");
+        }
+    }
 }
 
 
@@ -197,23 +234,20 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
             }
 
             switch(parse_topic(mqtt_data->topic)){
+                /*
+                    {
+                    "sw_title":"aaa",
+                    "sw_version":"1.0.1",
+                    "sw_tag":"aaa 1.0.1",
+                    "sw_size":175392,
+                    "sw_checksum_algorithm":"SHA256",
+                    "sw_checksum":"d50389bbc268d9fa040a44c389f56615f58c824c0df8277cda869c496cacc961"
+                    } from topic v1/devices/me/attributes
+                */
                 case TB_TOPIC_ATTR_REQ:
-                    ESP_LOGI(TAG, "\n\nMensaje atributos MQTT");
-
-                    /*
-                        {
-                        "sw_title":"aaa",
-                        "sw_version":"1.0.1",
-                        "sw_tag":"aaa 1.0.1",
-                        "sw_size":175392,
-                        "sw_checksum_algorithm":"SHA256",
-                        "sw_checksum":"d50389bbc268d9fa040a44c389f56615f58c824c0df8277cda869c496cacc961"
-                        } from topic v1/devices/me/attributes
-                    */
-                    attributes_handler(mqtt_data->data);
-                    break;
                 case TB_TOPIC_ATTR_RESP:
                     ESP_LOGI(TAG, "Mensaje atributos MQTT:\n%s\n", mqtt_data->data);
+                    attributes_handler(mqtt_data->data);
                     break;
                 case TB_TOPIC_PROV_RESP:
                     /*

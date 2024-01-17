@@ -70,10 +70,11 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base, int32_t eve
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "Connected with IP Address:" IPSTR, IP2STR(&event->ip_info.ip));
 
-        esp_event_post(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CONNECTED, (void *)NULL, 0, 0);
-
         /* Signal main application to continue execution */
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_EVENT);
+
+        esp_event_post(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CONNECTED, (void *)NULL, 0, 0);
+
     }
 }
 
@@ -119,6 +120,7 @@ static void wifi_prov_event_handler(void* arg, esp_event_base_t event_base, int3
             break;
         case WIFI_PROV_END:
             /* De-initialize manager once provisioning is finished */
+            ESP_LOGI(TAG, "Provisioning ended");
             wifi_prov_mgr_deinit();
             break;
         default:
@@ -242,6 +244,7 @@ void provisioning_init(void)
         /* Start provisioning service */
         ESP_ERROR_CHECK(wifi_prov_mgr_start_provisioning(security, (const void *) sec_params, service_name, service_key));
         wifi_prov_mgr_endpoint_register("custom-data", custom_prov_data_handler, NULL);
+
         wifi_prov_print_qr(service_name, username, pop, PROV_TRANSPORT_SOFTAP);
     } else {
         ESP_LOGI(TAG, "Already provisioned, starting Wi-Fi STA");
@@ -255,7 +258,6 @@ void provisioning_init(void)
 
         /* Wait for Wi-Fi connection */
         xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, true, true, portMAX_DELAY);
-
     }
 
 

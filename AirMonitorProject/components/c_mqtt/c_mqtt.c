@@ -297,6 +297,8 @@ void mqtt_stop_client(){
 
         MQTT_STATUS = MQTT_SETUP;
         MQTT_USERNAME = NULL;
+        MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
+        MQTT_PORT = CONFIG_MQTT_BROKER_PORT;
     }
 }
 
@@ -307,7 +309,7 @@ static void _init_broker(){
     char * prefix = "mqtt";
     #endif
 
-    char broker_url[50];
+    char broker_url[50] = {};
     snprintf(broker_url, 50, "%s://%s", prefix, MQTT_BROKER);
     mqtt_set_broker(broker_url);
 }

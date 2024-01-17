@@ -47,15 +47,13 @@ void setup(){
     nvs_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+    provisioning_init();
 
     int status = context_refresh_node_status(NULL);
     init_event_handlers();
 
-    if(status==NODE_STATE_PROV){
-        provisioning_init();
-
-    }else{
-        wifi_init();
+    if(status!=NODE_STATE_PROV){
+        //wifi_init();
         mqtt_init();
         si7021_init_sensor();
     }

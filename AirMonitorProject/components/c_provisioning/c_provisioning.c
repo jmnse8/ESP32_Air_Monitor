@@ -58,6 +58,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         case WIFI_EVENT_AP_STADISCONNECTED:
             ESP_LOGI(TAG, "SoftAP transport: Disconnected!");
             //Enviar evento de aprovisionamiento compeltado aqui
+            
             break;
         default:
             break;
@@ -72,7 +73,7 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base, int32_t eve
         esp_event_post(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CONNECTED, (void *)NULL, 0, 0);
 
         /* Signal main application to continue execution */
-        //xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_EVENT);
+        xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_EVENT);
     }
 }
 
@@ -150,11 +151,14 @@ esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ss
                                           uint8_t **outbuf, ssize_t *outlen, void *priv_data)
 {
     if (inbuf) {
-        char * buffer = (char *)inbuf;
+        char *aux = (char *)inbuf;
         ESP_LOGI(TAG, "Received data: %.*s", inlen, (char *)inbuf);
-        esp_event_post(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CUSTOM_DATA, (void *)buffer, strlen(buffer), 0);
-
+        char *buffer = (char *)malloc((inlen + 1) * sizeof(char));
+        memcpy(buffer, aux, inlen);
+        //buffer[inlen] = '\0';
+        esp_event_post(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CUSTOM_DATA, (void *)buffer, inlen, 0);
     }
+
     char response[] = "SUCCESS";
     *outbuf = (uint8_t *)strdup(response);
     if (*outbuf == NULL) {
@@ -248,9 +252,11 @@ void provisioning_init(void)
 
         /* Start Wi-Fi station */
         wifi_init_sta();
+
+        /* Wait for Wi-Fi connection */
+        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, true, true, portMAX_DELAY);
+
     }
 
-    /* Wait for Wi-Fi connection */
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, true, true, portMAX_DELAY);
 
 }

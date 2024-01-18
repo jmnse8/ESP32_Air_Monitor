@@ -34,16 +34,27 @@ enum{
 
 //i2c_port_t i2c_num = I2C_MASTER_NUM;
 
-static void _sensor_timer_callback(void* arg);
+//static void _sensor_timer_callback(void* arg);
 
 static const char* TAG = "SENSOR";
 static int SENSOR_MODE = SENSORSI7021_TEMP_MODE;
-static int SENSOR_FREQ = CONFIG_SENSOR_FREQ;
+
+static int SAMPLING_SENSOR_FREQ_TEMP = CONFIG_SENSOR_FREQ;
+static int SAMPLING_SENSOR_FREQ_HUM = CONFIG_SENSOR_FREQ;
 static int SENSOR_N_PARAMS = 2;
 
 
-static esp_timer_handle_t tmp_sensor_timer;
+static esp_timer_handle_t temp_sensor_timer;
 static esp_timer_handle_t hum_sensor_timer;
+
+// Define el tipo de puntero a función
+typedef void (*TimerCallbackFunc)(void*);
+
+// Estructura para almacenar el puntero a función y el nombre del temporizador
+typedef struct {
+    TimerCallbackFunc callback;
+    char* name;
+} TimerConfig;
 
 static void _refresh_mode(){
     int mode = SENSORSI7021_DISABLED_MODE;
@@ -57,11 +68,11 @@ static void _refresh_mode(){
 }
 
 
-static void _set_sensor_onoff(esp_timer_handle_t* timer, int status){
+static void _set_sensor_onoff(esp_timer_handle_t* timer, int status, int samplingSensorFreq){
 
     if((int)esp_timer_is_active(*timer) != status){
         if(status)
-            ESP_ERROR_CHECK(esp_timer_start_periodic(*timer, SENSOR_FREQ * 1000 * 1000));
+            ESP_ERROR_CHECK(esp_timer_start_periodic(*timer, samplingSensorFreq * 1000 * 1000));
         else
             ESP_ERROR_CHECK(esp_timer_stop(*timer));
 
@@ -91,11 +102,10 @@ char* si7021_get_mode(){
     return NULL;
 }
 
-static void _configure_timer(esp_timer_handle_t* timer, char *name){
-
+static void _configure_timer(esp_timer_handle_t* timer, TimerConfig* config) {
     const esp_timer_create_args_t sensor_timer_args = {
-            .callback = &_sensor_timer_callback,
-            .name = name
+        .callback = config->callback,
+        .name = config->name
     };
 
     ESP_ERROR_CHECK(esp_timer_create(&sensor_timer_args, timer));
@@ -132,30 +142,44 @@ void si7021_start_sensor(void){
 
 void si7021_init_sensor(void){
     i2c_master_init();
-    //ESP_LOGI(TAG, "TEMP: %i",  I2C_MASTER_FREQ_HZ);
-       
-    //i2c_master_driver_initialize(i2c_num, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, I2C_MASTER_FREQ_HZ, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE);
-    _configure_timer(&tmp_sensor_timer, "tmp_sensor_timer");
-    _configure_timer(&hum_sensor_timer, "hum_sensor_timer");
+    
+    TimerConfig timerConfigTemp = {
+        .callback = &_sensor_timer_callback_temp,
+        .name = "temp_timer"
+    };
 
-    _set_sensor_onoff(&tmp_sensor_timer, 1);
+    TimerConfig timerConfigHum = {
+        .callback = &_sensor_timer_callback_hum,
+        .name = "hum_timer"
+    };
+    _configure_timer(&temp_sensor_timer, &timerConfigTemp);
+    _configure_timer(&hum_sensor_timer, &timerConfigHum);
+
+    _set_sensor_onoff(&temp_sensor_timer, 1, SAMPLING_SENSOR_FREQ_TEMP);
+    _set_sensor_onoff(&hum_sensor_timer, 1, SAMPLING_SENSOR_FREQ_HUM);
+    
+    //_configure_timer(&tmp_sensor_timer, "tmp_sensor_timer");
+    //_configure_timer(&hum_sensor_timer, "hum_sensor_timer");
+
+    //_set_sensor_onoff(&tmp_sensor_timer, 1);
 }
 
 
-static void _sensor_timer_callback(void* arg)
-{
+
+static void _sensor_timer_callback_temp(void* arg) {
     if(SENSOR_MODE==SENSORSI7021_TEMP_MODE || SENSOR_MODE==SENSORSI7021_ALL_MODE){
         float temp;
         readTemperature(0, &temp);    
         esp_event_post(SENSORSI7021_EVENT_BASE, SENSORSI7021_TEMP_DATA, &temp, sizeof(temp), 0);
+        free(temp);
     }
+}
 
+static void _sensor_timer_callback_hum(void* arg) {
     if(SENSOR_MODE==SENSORSI7021_HUM_MODE || SENSOR_MODE==SENSORSI7021_ALL_MODE){
         float hum;
         readHumidity(0, &hum);    
         esp_event_post(SENSORSI7021_EVENT_BASE, SENSORSI7021_HUM_DATA, &hum, sizeof(hum), 0);
+        free(hum);
     }
-    
 }
-
-

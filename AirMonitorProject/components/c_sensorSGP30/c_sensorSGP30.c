@@ -24,7 +24,7 @@ enum{
 
 i2c_port_t i2c_num = I2C_MASTER_NUM;
 
-static void _sensor_timer_callback(void* arg);
+//static void _sensor_timer_callback(void* arg);
 
 static const char* TAG = "SENSOR_SGP30";
 static int SENSOR_MODE;

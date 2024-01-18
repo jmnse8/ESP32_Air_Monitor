@@ -162,13 +162,15 @@ static coap_response_t message_handler(coap_session_t *session, const coap_pdu_t
             if (data_len != total) {
                 printf("---Unexpected partial data received offset %u, length %u\n", offset, data_len);
             }
-            printf("***Received:\n%.*s\n", (int)data_len, data);
             coap_bin_const_t token = coap_pdu_get_token(received);
             if (memcmp(token.s, tokenProvision, token.length) == 0) {
-                ESP_LOGI(TAG, "el token era igual (%d bytes):\n%.*s\n", data_len, (int)data_len, data);
+                ESP_LOGI(TAG, "El token era igual (%d bytes):\n%.*s\n", data_len, (int)data_len, data);
 
                 // Post the event
                 esp_event_post(C_COAP_EVENT_BASE, C_COAP_EVENT_RECEIVED_DATA, data, (int)data_len, 0);
+            }
+            else {
+                ESP_LOGI(TAG, "He recibido algo que no es el token (%d bytes):\n%.*s\n", data_len, (int)data_len, data);
             }
         }
         return COAP_RESPONSE_OK;

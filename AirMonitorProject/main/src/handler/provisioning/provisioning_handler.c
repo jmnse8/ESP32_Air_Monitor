@@ -31,6 +31,10 @@ void provisioning_handler(void* handler_args, esp_event_base_t base, int32_t id,
             ESP_LOGI(TAG, "C_PROVISIONG_EVENT_CONNECTED");
             context_refresh_node_status(NODE_STATE_HAS_WIFI_CREDENTIALS);
         break;
+        case C_PROVISIONG_EVENT_DISCONNECTED:
+            ESP_LOGI(TAG, "C_PROVISIONG_EVENT_DISCONNECTED");
+            context_refresh_node_status(NODE_STATE_WIFI_DISCONNECTED);
+        break;
     }
     //esp_restart();
 }

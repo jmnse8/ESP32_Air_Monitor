@@ -13,15 +13,21 @@
 #include "c_mqtt.h"
 #include "c_sntp.h"
 #include "c_deepSleep.h"
+#include "c_provisioning.h"
 
 #include "c_nvs.h"
 #include "context.h"
 
 #include "mqtt_handler.h"
 #include "sensor_handler.h"
+#include "provisioning_handler.h"
 
 
 static void init_event_handlers(){
+
+    //Provisioning
+    ESP_ERROR_CHECK(esp_event_handler_register(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CONNECTED, provisioning_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_CUSTOM_DATA, provisioning_handler, NULL));
 
     //MQTT
     ESP_ERROR_CHECK(esp_event_handler_register(C_MQTT_EVENT_BASE, C_MQTT_EVENT_CONNECTED, mqtt_handler, NULL));
@@ -41,16 +47,23 @@ void setup(){
     nvs_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+    provisioning_init();
 
-    context_refresh_node_status(NULL);
-
+    int status = context_refresh_node_status(NULL);
     init_event_handlers();
-    wifi_init();
-    mqtt_init();
 
-    sntp_sync_time_init();
-    init_deep_sleep();
-    si7021_init_sensor();
+    if(status!=NODE_STATE_PROV){
+        //wifi_init();
+        mqtt_init();
+        si7021_init_sensor();
+    }
+
+    
+    
+
+    //sntp_sync_time_init();
+    //init_deep_sleep();
     //sgp30_init_sensor();
+    
 }
 

@@ -24,7 +24,6 @@
 
 #include "c_mqtt.h"
 
-
 ESP_EVENT_DEFINE_BASE(C_MQTT_EVENT_BASE);
 
 enum {
@@ -34,15 +33,20 @@ enum {
     MQTT_ERR
 };
 
+static const char *TAG = "C_MQTT";
+
 int MQTT_STATUS = MQTT_SETUP;
 int MQTT_QOS = 0;
 char *MQTT_USERNAME = NULL;
 char *MQTT_LWT_MESSAGE = NULL;
-int MQTT_PORT = 1883;
+char *MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
+int MQTT_PORT = CONFIG_MQTT_BROKER_PORT;
 
+#if CONFIG_MQTT_USE_SECURE_VERSION
+extern const uint8_t server_cert_pem_start[] asm("_binary_tb_mqtt_cert_pem_start");
+extern const uint8_t server_cert_pem_end[] asm("_binary_tb_mqtt_cert_pem_end");
+#endif
 
-static const char *TAG = "C_MQTT";
-static char *MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
 
 static esp_mqtt_client_handle_t mqtt_client;
 
@@ -101,7 +105,10 @@ int mqtt_set_lwt_msg(char *msg){
 
 int mqtt_set_broker(char *broker){
     if(MQTT_STATUS == MQTT_SETUP){
-        MQTT_BROKER = broker;
+        int len = strlen(broker);
+        MQTT_BROKER = (char *)malloc((len + 1)*sizeof(char));
+        strncpy(MQTT_BROKER, broker, len);
+        MQTT_BROKER[len] = '\0';
         return 0;
     }
     return 1;
@@ -139,11 +146,10 @@ int mqtt_unsubscribe_to_topic(char* topic){
 int mqtt_publish_to_topic(char* topic, uint8_t* data, int data_length){
     if(MQTT_STATUS == MQTT_CONNECTED){
         int retain = 0;
-        int msg_id = esp_mqtt_client_publish(mqtt_client, topic, (const void *)data, data_length, MQTT_QOS, retain);
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+        esp_mqtt_client_publish(mqtt_client, topic, (const void *)data, data_length, MQTT_QOS, retain);
+        //ESP_LOGI(TAG, "Published to topic %s with data %s", topic, (char *)data);
         return 0;
     }
-
     return 1;
 }
 
@@ -153,33 +159,29 @@ int mqtt_publish_to_topic(char* topic, uint8_t* data, int data_length){
 */
 static void handle_received_data(const char* topic, int topic_len, const char* data, int data_len) {
 
-    // Allocate memory for the struct
-    struct mqtt_com_data* mqtt_data = malloc(sizeof(struct mqtt_com_data));
+    struct c_mqtt_data* mqtt_data = malloc(sizeof(struct c_mqtt_data));
     if (mqtt_data == NULL) {
-        // Handle allocation failure
         return;
     }
 
-    // Allocate memory for the strings and copy data
-    mqtt_data->topic = malloc(topic_len + 1);  // +1 for null terminator
-    mqtt_data->data = malloc(data_len + 1);    // +1 for null terminator
+    mqtt_data->topic = malloc(topic_len + 1);
+    mqtt_data->data = malloc(data_len + 1);
+    mqtt_data->data_len = data_len;
 
     if (mqtt_data->topic == NULL || mqtt_data->data == NULL) {
-        // Handle allocation failure
         free(mqtt_data->topic);
         free(mqtt_data->data);
         free(mqtt_data);
         return;
     }
 
-    // Copy the data into the struct
     memcpy(mqtt_data->topic, topic, topic_len);
-    mqtt_data->topic[topic_len] = '\0';  // Null-terminate the string
+    mqtt_data->topic[topic_len] = '\0';
     memcpy(mqtt_data->data, data, data_len);
-    mqtt_data->data[data_len] = '\0';    // Null-terminate the string
+    mqtt_data->data[data_len] = '\0';
 
-    // Post the event
-    esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, mqtt_data, sizeof(struct mqtt_com_data), 0);
+    esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, (void *)mqtt_data, sizeof(struct c_mqtt_data), 0);
+    
 }
 
 /**
@@ -218,11 +220,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             break;
 
         case MQTT_EVENT_PUBLISHED:
-            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+            //ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
             break;
 
         case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            //ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            //esp_event_post(C_MQTT_EVENT_BASE, C_MQTT_EVENT_RECEIVED_DATA, (void *)event, sizeof(event), 0);
             handle_received_data((const char*)event->topic, event->topic_len, (const char*)event->data, event->data_len);
             break;
 
@@ -242,25 +245,32 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-static void mqtt_start(){
+static void _mqtt_start(){
 
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address = {
                 .uri = MQTT_BROKER,
                 .port = MQTT_PORT,
-            }
+            },
+            #if CONFIG_MQTT_USE_SECURE_VERSION
+            .verification = {
+                .use_global_ca_store = false,
+                .certificate = (const char *)server_cert_pem_start,
+                .certificate_len = server_cert_pem_end - server_cert_pem_start,
+                .skip_cert_common_name_check = true,
+            },
+            #endif
+            
         },
         .credentials = {
             .username = MQTT_USERNAME,
-            //.username = "8nyHV2MCBKKqa7Mfs6sG",
-            //.username = "0erTLZgiRFIiCzgn1AnT",
         },
         #ifdef CONFIG_MQTT_USE_LWT
         .session = {
             .last_will = {
                 .topic = CONFIG_MQTT_LWT_TOPIC,
-                #ifdef CONFIG_MQTT_USE_LWT_CUSTOM_MSG
+                #if CONFIG_MQTT_USE_LWT_CUSTOM_MSG
                 .msg = CONFIG_MQTT_LWT_MESSAGE,
                 .msg_len = strlen(CONFIG_MQTT_LWT_MESSAGE),
                 #else
@@ -286,20 +296,28 @@ void mqtt_stop_client(){
         mqtt_client = NULL; // Set to NULL to avoid using a stopped client
 
         MQTT_STATUS = MQTT_SETUP;
-        MQTT_QOS = 0;
         MQTT_USERNAME = NULL;
-        MQTT_PORT = 1883;
+        MQTT_BROKER = CONFIG_MQTT_BROKER_URL;
+        MQTT_PORT = CONFIG_MQTT_BROKER_PORT;
     }
+}
+
+static void _init_broker(){
+    #if CONFIG_MQTT_USE_SECURE_VERSION
+    char * prefix = "mqtts";
+    #else
+    char * prefix = "mqtt";
+    #endif
+
+    char broker_url[50] = {};
+    snprintf(broker_url, 50, "%s://%s", prefix, MQTT_BROKER);
+    mqtt_set_broker(broker_url);
 }
 
 void mqtt_start_client(){
     if(mqtt_client == NULL && MQTT_STATUS == MQTT_SETUP){
+        _init_broker();
         MQTT_STATUS = MQTT_INIT;
-        /*
-        esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
-        esp_log_level_set("transport", ESP_LOG_DEBUG);
-        esp_log_level_set("mqtt_client", ESP_LOG_DEBUG);
-        */
-        mqtt_start();
+        _mqtt_start();
     }
 }

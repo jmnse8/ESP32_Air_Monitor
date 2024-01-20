@@ -112,13 +112,13 @@ char *get_access_token_TB_response(char *payload){
 }
 
 
-static int parse_topic(char *topic){
+static int _parse_method(char *topic){
 
     if (strcmp(topic, "CTX") == 0) {
         return MQTT_SET_CTX;
     } 
     else if (strcmp(topic, "FREQ") == 0) {
-        return MQTT_SET_FREQ_TOPIC;
+        return MQTT_GET_FREQ_TOPIC;
     } 
     else if (strcmp(topic, "ONOFF") == 0){
         return MQTT_SET_ONOFF_TOPIC;
@@ -164,6 +164,38 @@ int _parse_TB_token_response(cJSON* root){
     return res;
 }
 
+int _parse_ota_topic(const cJSON* root){
+    if (root != NULL){
+        cJSON* sw_titleItem = cJSON_GetObjectItem(root, "sw_title");
+
+        if(sw_titleItem!=NULL)
+            return MQTT_OTA_UPDATE_SETUP;
+    }
+    return MQTT_INVALID_VALUE;
+}
+
+
+
+int parse_topic(const char *topic){
+
+    if (strcmp(topic, "v1/devices/me/attributes") == 0) {
+        return TB_TOPIC_ATTR_REQ;
+    } 
+    else if (strcmp(topic, "v1/devices/me/attributes/response") == 0) {
+        return TB_TOPIC_ATTR_RESP;
+    } 
+    else if (strcmp(topic, "/provision/response") == 0){
+        return TB_TOPIC_PROV_RESP;
+    }
+    else if (strncmp(topic, "v1/devices/me/rpc/request", strlen("v1/devices/me/rpc/request")) == 0){
+        return TB_TOPIC_RPC_REQ;
+    }
+    else{
+        return MQTT_INVALID_VALUE;
+    }
+}
+
+
 
 int parse_method(const char *payload) {
     cJSON* root = cJSON_Parse(payload);
@@ -174,7 +206,10 @@ int parse_method(const char *payload) {
         if(methodItem!=NULL){
             char method[20];
             snprintf(method, sizeof(method), "%s", methodItem->valuestring);
-            res = parse_topic(method);
+            res = _parse_method(method);
+        }
+        else{
+            res = _parse_ota_topic(root);
         }
 
         if(res==MQTT_INVALID_VALUE)
@@ -183,7 +218,6 @@ int parse_method(const char *payload) {
     cJSON_Delete(root);
     return res;
 }
-
 
 
 char *build_topic(char *base, char* comp){

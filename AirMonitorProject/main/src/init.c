@@ -21,6 +21,9 @@
 #include "mqtt_handler.h"
 #include "sensor_handler.h"
 #include "provisioning_handler.h"
+#include "c_spiffs.h"
+
+#include "esp_log.h"
 
 
 static void init_event_handlers(){
@@ -44,6 +47,17 @@ static void init_event_handlers(){
 
 
 void setup(){
+
+    spiffs_init();
+    esp_log_set_vprintf(&spiffs_log_vprintf);
+    esp_log_level_set("*", ESP_LOG_ERROR);
+
+    ESP_LOGE("AA", "QQQQ");
+    ESP_LOGE("AA", "WWWW");
+    ESP_LOGW("AA", "AAAA");
+    ESP_LOGI("BB", "HHHH");
+    spiffs_read("log.txt");
+
     nvs_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -58,7 +72,7 @@ void setup(){
         si7021_init_sensor();
     }
 
-    
+ 
     
 
     //sntp_sync_time_init();

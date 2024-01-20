@@ -19,11 +19,6 @@ enum{
 */
 void si7021_init_sensor(void);
 
-/*
-    Cambia la frecuencia de muestreo en segundos
-*/
-int si7021_change_sample_period(int sec);
-
 
 /**
  * @brief Gets the status of sensorized parameters and returns a char array.
@@ -35,17 +30,6 @@ int si7021_change_sample_period(int sec);
  *         The caller is responsible for freeing the allocated memory.
  */
 char* si7021_get_mode();
-
-
-/*
-    Detener la sesorización de datos del si7021
-*/
-void si7021_stop_sensor(void);
-
-/*
-    Iniciar la sesorización de datos del si7021
-*/
-void si7021_start_sensor(void);
 
 /**
     @brief Detener/Iniciar la sensorización de un dato concreto del si7021

@@ -1,5 +1,5 @@
-#ifndef __MQTT_COM
-#define __MQTT_COM
+#ifndef __C_MQTT
+#define __C_MQTT
 
 #include "esp_event.h"
 #include "mqtt_client.h"

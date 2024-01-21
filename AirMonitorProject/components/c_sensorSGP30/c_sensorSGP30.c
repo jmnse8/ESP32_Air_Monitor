@@ -157,10 +157,28 @@ static void _sensor_timer_callback(void* arg) {
         esp_event_post(SENSORSGP30_EVENT_BASE, SENSORSGP30_TVOC_DATA, &tvoc, sizeof(tvoc), 0);
     }
 
-    if(SENSOR_MODE==SENSORSGP30_ECO2_MODE || SENSOR_MODE==SENSORSGP30_ALL_MODE){
-        uint16_t eCO2 = main_sgp30_sensor.eCO2;
-        esp_event_post(SENSORSGP30_EVENT_BASE, SENSORSGP30_ECO2_DATA, &eCO2, sizeof(eCO2), 0);
+    xSemaphoreTake(tvocMutex, portMAX_DELAY);
+    if(tvocData.counter < 100) {
+        tvocData.sum += main_sgp30_sensor.TVOC;
+        tvocData.counter++;
     }
+    xSemaphoreGive(tvocMutex);
 }
 
+void sgp30_tvoc_change_send_freq(int sec) {
+    if(esp_timer_is_active(send_tvoc_sensor_timer))
+        if (sec > SAMPLING_SENSOR_FREQ) {
+            SEND_SENSOR_FREQ_TVOC = sec;
+            ESP_ERROR_CHECK(esp_timer_stop(send_tvoc_sensor_timer));
+            ESP_ERROR_CHECK(esp_timer_start_periodic(send_tvoc_sensor_timer, SEND_SENSOR_FREQ_TVOC * 1000 * 1000));
+        }
+}
 
+void sgp30_eco2_change_send_freq(int sec) {
+    if(esp_timer_is_active(send_eco2_sensor_timer))
+        if (sec > SAMPLING_SENSOR_FREQ) {
+            SEND_SENSOR_FREQ_ECO2 = sec;
+            ESP_ERROR_CHECK(esp_timer_stop(send_eco2_sensor_timer));
+            ESP_ERROR_CHECK(esp_timer_start_periodic(send_eco2_sensor_timer, SEND_SENSOR_FREQ_ECO2 * 1000 * 1000));
+        }
+}

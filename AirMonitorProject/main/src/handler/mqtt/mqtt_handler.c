@@ -12,6 +12,7 @@
 #include "context.h"
 #include "cJSON.h"
 #include "ota_handler.h"
+#include "mqtt_client_side_rpc.h"
 
 static const char* TAG = "MQTT_HANDLER";
 
@@ -67,6 +68,7 @@ static void _start_with_tb_token(char *token){
 }
 
 
+
 static void _get_access_token_TB(char *payload){
     char * token = get_access_token_TB_response(payload);
 
@@ -94,18 +96,17 @@ static void _on_connected(){
             _signup2tb();
             break;
         case NODE_STATE_REGULAR:
-            mqtt_subscribe_to_topic(CONFIG_TB_RPC_REQUEST_TOPIC);
+            mqtt_subscribe_to_topic(CONFIG_TB_SS_RPC_REQUEST_TOPIC);
+            mqtt_subscribe_to_topic(CONFIG_TB_CS_RPC_RESPONSE_TOPIC);
             //https://thingsboard.io/docs/reference/mqtt-api/
             mqtt_subscribe_to_topic("v1/devices/me/attributes/response/+");
             mqtt_subscribe_to_topic("v1/devices/me/attributes");
 
-            mqtt_subscribe_to_topic("v1/devices/me/rpc/response/+");
-            mqtt_subscribe_to_topic("v1/devices/me/rpc/request/+");
-            
             mqtt_subscribe_to_topic("v2/sw/response/+");
-            //mqtt_subscribe_to_topic("v2/sw/response/+/chunk/+");
             mqtt_subscribe_to_topic("v2/fw/response/+");
-            //mqtt_subscribe_to_topic("v2/fw/response/+/chunk/+");
+
+            request_publish_frequency();
+
             #ifdef CONFIG_MQTT_LWT_TOPIC
             mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
             #endif
@@ -125,7 +126,7 @@ static void _get_onoff_status(char * request_id){
     cJSON_AddBoolToObject(root, "onoff", onoff);
 
     char *data = cJSON_Print(root);
-    mqtt_publish_to_topic(build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
+    mqtt_publish_to_topic(build_topic(CONFIG_TB_SS_RPC_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
 
     free((void*)data);
     free(request_id);
@@ -145,7 +146,7 @@ void rpc_request_handler(struct c_mqtt_data* mqtt_data){
         break;
         case MQTT_SET_SENSOR_STAT_TOPIC:
             request_id = mqtt_topic_last_token(mqtt_data->topic);
-            handler_set_sensor_stat(mqtt_data->data, build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id));
+            handler_set_sensor_stat(mqtt_data->data, build_topic(CONFIG_TB_SS_RPC_RESPONSE_TOPIC, request_id));
             free(request_id);
         break;
         case MQTT_GET_ONOFF_TOPIC:
@@ -160,16 +161,22 @@ void rpc_request_handler(struct c_mqtt_data* mqtt_data){
     }
 }
 
+
+static const char *freq_topics[] = {"tmp_pub_freq", "hum_pub_freq", "eco2_pub_freq", "tvoc_pub_freq"};
+
 static int _frequency_handler(char * payload){
     int res = MQTT_INVALID_VALUE;
 
     cJSON* root = cJSON_Parse(payload);
     if (root != NULL){
-        cJSON *publish_frequencyItem = cJSON_GetObjectItem(root, "publish_frequency");
 
-        if(publish_frequencyItem!=NULL){
-            handler_set_publish_frequency(publish_frequencyItem->valueint);
-            res = MQTT_SET_PUB_FREQ_TOPIC;
+        for (size_t i = 0; i < 4; i++) {
+            cJSON *item = cJSON_GetObjectItem(root, freq_topics[i]);
+            if (item != NULL) {
+                res = MQTT_SET_PUB_FREQ_TOPIC;
+                handler_set_publish_frequency(item->valueint, i);
+                break;
+            }
         }
     }
     cJSON_Delete(root);
@@ -202,7 +209,20 @@ static int _ota_update_handler(char * payload){
 
 
 
-void attributes_handler(char * payload){
+void rpc_response_handler(char * payload){
+  cJSON* root = cJSON_Parse(payload);
+    if (root != NULL){
+        cJSON *typeItem = cJSON_GetObjectItem(root, "type");
+        if(typeItem!=NULL){
+            if(strcmp(typeItem->valuestring, "ALL_PUB_FREQ")==0){
+                publish_frequency_response_handler(payload);
+            }
+        }
+    }
+   
+}
+
+void attributes_request_handler(char * payload){
     if(_ota_update_handler(payload)==MQTT_INVALID_VALUE){
         if(_frequency_handler(payload)==MQTT_INVALID_VALUE){
 
@@ -245,9 +265,11 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
                     } from topic v1/devices/me/attributes
                 */
                 case TB_TOPIC_ATTR_REQ:
+                    ESP_LOGI(TAG, "Mensaje atributos MQTT:\n%s\n", mqtt_data->data);
+                    attributes_request_handler(mqtt_data->data);
+                    break;
                 case TB_TOPIC_ATTR_RESP:
                     ESP_LOGI(TAG, "Mensaje atributos MQTT:\n%s\n", mqtt_data->data);
-                    attributes_handler(mqtt_data->data);
                     break;
                 case TB_TOPIC_PROV_RESP:
                     /*
@@ -273,10 +295,14 @@ void mqtt_handler(void* handler_args, esp_event_base_t base, int32_t id, void* e
                 */
                     rpc_request_handler(mqtt_data);
                     break;
+                case TB_TOPIC_RPC_RESP:
+                    ESP_LOGI(TAG, "Mensaje RPC:\n%s\n", mqtt_data->data);
+                    rpc_response_handler(mqtt_data->data);
+                    break;
 
                 default:
-                    //ESP_LOGE(TAG, "UNKNOWN TOPIC: \nTOPIC=%s\nDATA=%s", mqtt_data->topic, mqtt_data->data);
-                    ota_update_chunk_received(mqtt_data->data, mqtt_data->data_len);
+                    ESP_LOGE(TAG, "UNKNOWN TOPIC: \nTOPIC=%s\nDATA=%s", mqtt_data->topic, mqtt_data->data);
+                    //ota_update_chunk_received(mqtt_data->data, mqtt_data->data_len);
                     break;
             }
  

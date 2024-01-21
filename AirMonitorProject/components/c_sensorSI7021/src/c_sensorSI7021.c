@@ -158,4 +158,21 @@ static void _sensor_timer_callback(void* arg)
     
 }
 
+void si7021_temp_change_send_freq(int sec) {
+    if(esp_timer_is_active(temp_send_sensor_timer))
+        if (sec > SAMPLING_SENSOR_FREQ_TEMP) {
+            SEND_SENSOR_FREQ_TEMP = sec;
+            ESP_ERROR_CHECK(esp_timer_stop(temp_send_sensor_timer));
+            ESP_ERROR_CHECK(esp_timer_start_periodic(temp_send_sensor_timer, SEND_SENSOR_FREQ_TEMP * 1000 * 1000));
+        }
+}
 
+void si7021_hum_change_send_freq(int sec) {
+
+    if (esp_timer_is_active(hum_send_sensor_timer))
+        if (sec > SAMPLING_SENSOR_FREQ_HUM) {
+            SEND_SENSOR_FREQ_HUM = sec;
+            ESP_ERROR_CHECK(esp_timer_stop(hum_send_sensor_timer));
+            ESP_ERROR_CHECK(esp_timer_start_periodic(hum_send_sensor_timer, SEND_SENSOR_FREQ_HUM * 1000 * 1000));
+        }
+}

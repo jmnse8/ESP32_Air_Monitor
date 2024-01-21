@@ -185,14 +185,14 @@ static void handle_received_data(const char* topic, int topic_len, const char* d
 }
 
 /**
- * @brief Event handler registered to receive MQTT events
+ *  @brief  Event handler registered to receive MQTT events
  *
  *  This function is called by the MQTT client event loop.
  *
- * @param handler_args user data registered to the event.
- * @param base Event base for the handler(always MQTT Base in this example).
- * @param event_id The id for the received event.
- * @param event_data The data for the event, esp_mqtt_event_handle_t.
+ *  @param  handler_args    User data registered to the event.
+ *  @param  base            Event base for the handler(always MQTT Base in this example).
+ *  @param  event_id        The id for the received event.
+ *  @param  event_data      The data for the event, esp_mqtt_event_handle_t.
  */
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data){
     esp_mqtt_event_handle_t event = event_data;

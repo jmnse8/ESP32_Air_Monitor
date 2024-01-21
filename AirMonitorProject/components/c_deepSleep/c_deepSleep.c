@@ -79,11 +79,11 @@ void configure_awake(int secondsAwake, int secondsSleep) {
     
     esp_timer_handle_t deep_sleep_timer;
     ESP_ERROR_CHECK(esp_timer_create(&timer_args, &deep_sleep_timer));
-    ESP_ERROR_CHECK(esp_timer_start_once(deep_sleep_timer, secondsAwake * 100000));
+    ESP_ERROR_CHECK(esp_timer_start_once(deep_sleep_timer, secondsAwake * 1000 * 1000));
 }
 
 void configure_sleep(int secondsSleep) {
-    ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(secondsSleep * 100000));
+    ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(secondsSleep * 1000 * 1000));
     esp_deep_sleep_start();
 }
 

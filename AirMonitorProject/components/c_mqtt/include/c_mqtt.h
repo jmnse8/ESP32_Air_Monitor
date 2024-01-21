@@ -62,9 +62,11 @@ int mqtt_set_username(char *username);
 int mqtt_set_broker(char *broker);
 
 /**
- * @brief Set MQTT Quality of Service
- * @param
- *  qos: QoS 0 = At most once (default), QoS 1 = At least once, QoS 2 = Exactly once
+ *  @brief  Set MQTT Quality of Service
+ *  @param  qos
+ *          QoS 0 = At most once (default), 
+ *          QoS 1 = At least once, 
+ *          QoS 2 = Exactly once
 */   
 int mqtt_set_qos(int qos);
 

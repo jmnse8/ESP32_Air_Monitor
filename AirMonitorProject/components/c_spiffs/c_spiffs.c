@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
@@ -23,6 +22,33 @@ static bool static_fatal_error = false;
 static const uint32_t WRITE_CACHE_CYCLE = 5;
 static uint32_t counter_write = 0;
 
+/**
+ *  {
+ *      [0] = ESP_LOGE,
+ *      [1] = ESP_LOGW,
+ *      [2] = ESP_LOGI, 
+ *      [3] = ESP_LOGD,
+ *      [4] = ESP_LOGV
+ *  }
+*/
+static uint8_t SPIFFS_LOG_REG[] = {0, 0, 0, 0, 0};
+static char SPIFFS_LOG_REF[] = {'E', 'W', 'I', 'D', 'V'};
+
+
+void spiffs_activate_level2log(int level){
+    if(level > 0){
+        SPIFFS_LOG_REG[level % SPIFFS_CONTROL] = 1;
+    }
+}
+
+int _needs2b_stored(char type){
+    for(int i=0; i<5; i++){
+        if(type == SPIFFS_LOG_REF[i]){
+            return SPIFFS_LOG_REG[i];
+        }
+    }
+    return 0;
+}
 
 /**
  * @brief This function will be called by the ESP log library every time ESP_LOG needs to be performed.
@@ -40,18 +66,23 @@ int spiffs_log_vprintf(const char *fmt, va_list args) {
         printf("%s() ABORT. file handle SPIFFS_LOGFILE is NULL\n", __FUNCTION__);
         return -1;
     }
-    if (static_fatal_error == false) {
-        int iresult = vfprintf(f, fmt, args);
-        if (iresult < 0) {
-            printf("%s() ABORT. failed vfprintf() -> disable future vfprintf(f) \n", __FUNCTION__);
-            static_fatal_error = true;
-            return iresult;
-        }
+    if (!static_fatal_error) {
+        char esp_log_type = fmt[7];
+        if(_needs2b_stored(esp_log_type)){
+            int iresult = vfprintf(f, fmt, args);
+            if (iresult < 0) {
+                printf("%s() ABORT. failed vfprintf() -> disable future vfprintf(f) \n", __FUNCTION__);
+                static_fatal_error = true;
+                fclose(f);
+                return iresult;
+            }
 
-        // #2 Smart commit after x writes
-        counter_write++;
-        if (counter_write % WRITE_CACHE_CYCLE == 0) {
-            fsync(fileno(f));
+            // #2 Smart commit after x writes
+            counter_write++;
+            if (counter_write % WRITE_CACHE_CYCLE == 0) {
+                fsync(fileno(f));
+            }
+
         }
     }
     

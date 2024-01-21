@@ -47,16 +47,11 @@ static void init_event_handlers(){
 
 
 void setup(){
-
+    
     spiffs_init();
     esp_log_set_vprintf(&spiffs_log_vprintf);
-    esp_log_level_set("*", ESP_LOG_ERROR);
-
-    ESP_LOGE("AA", "QQQQ");
-    ESP_LOGE("AA", "WWWW");
-    ESP_LOGW("AA", "AAAA");
-    ESP_LOGI("BB", "HHHH");
-    spiffs_read("log.txt");
+    spiffs_activate_level2log(SPIFFS_LOGW);
+    spiffs_activate_level2log(SPIFFS_LOGE);
 
     nvs_init();
     ESP_ERROR_CHECK(esp_netif_init());
@@ -71,9 +66,6 @@ void setup(){
         mqtt_init();
         si7021_init_sensor();
     }
-
- 
-    
 
     //sntp_sync_time_init();
     //init_deep_sleep();

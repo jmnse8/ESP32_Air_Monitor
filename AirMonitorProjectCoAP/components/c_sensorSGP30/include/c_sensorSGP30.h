@@ -29,11 +29,6 @@ enum{
 */
 void sgp30_init_sensor(void);
 
-/*
-    Cambia la frecuencia de muestreo en segundos
-*/
-int sgp30_change_sample_period(int sec);
-
 
 /**
  * @brief Gets the status of sensorized parameters and returns a char array.
@@ -46,15 +41,6 @@ int sgp30_change_sample_period(int sec);
  */
 char* sgp30_get_mode();
 
-/*
-    Detener la sesorización de datos del sgp30
-*/
-void sgp30_stop_sensor(void);
-
-/*
-    Iniciar la sesorización de datos del sgp30
-*/
-void sgp30_start_sensor(void);
 
 /**
     @brief Detener/Iniciar la sensorización de un dato concreto del sgp30

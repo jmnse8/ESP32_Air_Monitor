@@ -49,4 +49,16 @@ char* sgp30_get_mode();
 */
 void sgp30_set_sensor_onoff(int sensor, int status);
 
+/**
+    @brief Cambia la frecuancia de envío de tvoc del sgp30
+    @param sec: segundos de la nueva frecuencia de envío
+*/
+void sgp30_tvoc_change_send_freq(int sec);
+
+/**
+    @brief Cambia la frecuancia de envío de eco2 del sgp30
+    @param sec: segundos de la nueva frecuencia de envío
+*/
+void sgp30_eco2_change_send_freq(int sec);
+
 #endif

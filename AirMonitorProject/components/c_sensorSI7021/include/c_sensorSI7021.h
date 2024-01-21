@@ -38,4 +38,16 @@ char* si7021_get_mode();
 */
 void si7021_set_sensor_onoff(int sensor, int status);
 
+/**
+    @brief Cambia la frecuancia de envío de temperatura del si7021
+    @param sec: segundos de la nueva frecuencia de envío
+*/
+void si7021_temp_change_send_freq(int sec);
+
+/**
+    @brief Cambia la frecuancia de envío de humedad del si7021
+    @param sec: segundos de la nueva frecuencia de envío
+*/
+void si7021_hum_change_send_freq(int sec);
+
 #endif

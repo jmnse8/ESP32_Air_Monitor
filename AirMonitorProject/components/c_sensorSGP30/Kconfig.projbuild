@@ -33,21 +33,21 @@ menu "SGP30 I2C Peripheral Configuration"
             range 1 100
             default 10
             help
-                Rate at which a sensor collects data in seconds.
+                Sensor send rate in seconds for TVOC.
 
         config SEND_SENSOR_FREQ_ECO2
             int "Sensor send rate in seconds for ECO2"
             range 1 100
             default 10
             help
-                Rate at which a sensor collects data in seconds.
+                Sensor send rate in seconds for ECO2.
 
         config SAMPLING_SENSOR_FREQ
             int "Sensor sampling rate in seconds"
             range 1 100
             default 2
             help
-                Rate at which a sensor collects data in seconds.
+                Sensor sampling rate in seconds.
         
     endmenu
 

@@ -219,3 +219,19 @@ static void _sampling_sensor_timer_callback(void* arg) {
     }
     xSemaphoreGive(tvocMutex);
 }
+
+void sgp30_tvoc_change_send_freq(int sec) {
+    if (sec > SAMPLING_SENSOR_FREQ) {
+        SEND_SENSOR_FREQ_TVOC = sec;
+        ESP_ERROR_CHECK(esp_timer_stop(send_tvoc_sensor_timer));
+        ESP_ERROR_CHECK(esp_timer_start_periodic(send_tvoc_sensor_timer, SEND_SENSOR_FREQ_TVOC * 1000 * 1000));
+    }
+}
+
+void sgp30_eco2_change_send_freq(int sec) {
+    if (sec > SAMPLING_SENSOR_FREQ) {
+        SEND_SENSOR_FREQ_ECO2 = sec;
+        ESP_ERROR_CHECK(esp_timer_stop(send_eco2_sensor_timer));
+        ESP_ERROR_CHECK(esp_timer_start_periodic(send_eco2_sensor_timer, SEND_SENSOR_FREQ_ECO2 * 1000 * 1000));
+    }
+}

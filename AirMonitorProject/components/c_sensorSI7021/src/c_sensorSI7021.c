@@ -222,7 +222,6 @@ static void _sampling_sensor_timer_callback_temp(void* arg) {
         xSemaphoreTake(tempMutex, portMAX_DELAY);
         tempData.sum += temp;
         tempData.counter++;
-        ESP_LOGI(TAG, "TEMP_DATA: suma %f contador: %i",  tempData.sum, tempData.counter);
         xSemaphoreGive(tempMutex);
     }
 }
@@ -235,7 +234,22 @@ static void _sampling_sensor_timer_callback_hum(void* arg) {
         xSemaphoreTake(humMutex, portMAX_DELAY);
         humData.sum += hum;
         humData.counter++;
-        ESP_LOGI(TAG, "HUM_DATA: suma %f contador: %i",  humData.sum, humData.counter);
         xSemaphoreGive(humMutex);
+    }
+}
+
+void si7021_temp_change_send_freq(int sec) {
+    if (sec > SAMPLING_SENSOR_FREQ_TEMP) {
+        SEND_SENSOR_FREQ_TEMP = sec;
+        ESP_ERROR_CHECK(esp_timer_stop(temp_send_sensor_timer));
+        ESP_ERROR_CHECK(esp_timer_start_periodic(temp_send_sensor_timer, SEND_SENSOR_FREQ_TEMP * 1000 * 1000));
+    }
+}
+
+void si7021_hum_change_send_freq(int sec) {
+    if (sec > SAMPLING_SENSOR_FREQ_HUM) {
+        SEND_SENSOR_FREQ_HUM = sec;
+        ESP_ERROR_CHECK(esp_timer_stop(hum_send_sensor_timer));
+        ESP_ERROR_CHECK(esp_timer_start_periodic(hum_send_sensor_timer, SEND_SENSOR_FREQ_HUM * 1000 * 1000));
     }
 }

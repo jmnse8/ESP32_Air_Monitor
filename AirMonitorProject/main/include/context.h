@@ -7,37 +7,78 @@ enum {
 };
 
 enum NODE_STATE_ENUM{
-    NODE_STATE_BLANK,                   //Factory reset (no provisioning) 
-    NODE_STATE_PROV_WIFI,               //Provisioning wifi
+    NODE_STATE_BLANK = 0,                   //Factory reset (no provisioning) 
 
-    NODE_STATE_SIGUP_DEVICE2TB_STATE,   //Signing tp to TB
+    /**
+     * NODE_STATE_PROV: Waiting for provisioning:
+     *      - Wifi's SSID and pwd 
+     *      - Access token to thingsboard
+    */
+    NODE_STATE_PROV = 1,               
 
-    NODE_STATE_HAS_TB_TOKEN,            //Wifi + Has TB token
-    NODE_STATE_WAIT_CTX,                //Waiting for TB to send the node's context
-    NODE_STATE_REGULAR,                 // Wifi + Node with context + TB connection
+    /**
+     * NODE_STATE_SIGUP_DEVICE2TB: Signing in TB in case access token was not 
+     *                                  provided from NODE_STATE_PROV_WIFI state
+    */
+    NODE_STATE_SIGUP_DEVICE2TB,
+
+    /**
+     * NODE_STATE_HAS_WIFI_CREDENTIALS: Has Wifi ssid & pwd. Now checking access access token
+    */
+    NODE_STATE_HAS_WIFI_CREDENTIALS,
+
+    /**
+     * NODE_STATE_HAS_TB_TOKEN: Has WiFi credentials and TB Access token
+    */
+    NODE_STATE_HAS_TB_TOKEN,
+
+    /**
+     * NODE_STATE_WAIT_CTX: Waiting to be provided of the node's context data (floor/room)
+    */
+    NODE_STATE_WAIT_CTX,
+
+    /**
+     * NODE_STATE_REGULAR: Has WiFi connection, access token and context
+    */
+    NODE_STATE_REGULAR,
+
+    /**
+     * NODE_STATE_INVALID_DATA: If any of the provisioned data is invalid
+    */
+    NODE_STATE_INVALID_DATA,
+
+
+    NODE_CONTROL_PARSE,
 
 };
 
 extern int NODE_STATUS;
 extern char *NODE_TB_TOKEN;
+extern char *NODE_SW_VERSION;
 
 /**
- * @brief Check & Refresh node's current status.ç
+ * @brief Check & Refresh node's current status.
  * @param status (NODE_STATE_ENUM or NULL)
  *          - If status == NULL, refreshes node's status automatically.
+ * @return NODE_STATE_ENUM
  */
-void context_refresh_node_status(int status);
+int context_refresh_node_status(int status);
+
+/**
+ * @brief Check if provided sw version ("a.b.c") is greater than current version.
+*/
+int context_check_sw_version(const char* ver);
 
 /**
  * @brief Set ThingsBoard provisioning token (and store it in NVS).
  */
-void context_set_node_tb_token(char * token);
+void context_set_tb_access_token(char * token);
 
 /**
  * @brief Get ThingsBoard provisioning token (if stored in NVS).
  * @return TOKEN or NULL
  */
-char *context_get_node_tb_token();
+char *context_get_tb_access_token();
 
 /**
  * @brief Set node floor/room context

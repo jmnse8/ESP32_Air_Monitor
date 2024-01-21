@@ -2,13 +2,13 @@ menu "WIFI Connection Configuration"
 
     config ESP_WIFI_SSID
         string "WiFi SSID"
-        default "MOVISTAR_330F"
+        default "CGA2121_etrZd6e"
         help
             SSID (network name) for the example to connect to.
 
     config ESP_WIFI_PASSWORD
         string "WiFi Password"
-        default "uzPL42P4vZQccui4wdQ2"
+        default "At6MuakCvLs78WPhbZ"
         help
             WiFi password (WPA or WPA2) for the example to use.
 

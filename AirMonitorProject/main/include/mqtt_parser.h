@@ -28,7 +28,8 @@ enum MQTT_TB_CMD {
 
     TB_TOPIC_PROV_RESP,     //  /provision/response
 
-    TB_TOPIC_RPC_REQ        // v1/devices/me/rpc/request/{request_id}
+    TB_TOPIC_RPC_REQ,        // v1/devices/me/rpc/request/{request_id}
+    TB_TOPIC_RPC_RESP,        // v1/devices/me/rpc/response/request_id}
 };
 
 

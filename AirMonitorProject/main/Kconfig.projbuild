@@ -38,16 +38,31 @@ menu "Com MQTT - Thingsboard Configuration"
             default "v1/devices/me/telemetry"
             help
                 Topic to publish/subscribe to in order to send telemetry to TB
-    
-        config TB_RPC_RESPONSE_TOPIC
-            string "Thingsboard Response Topic"
-            default "v1/devices/me/rpc/response/"
-            help
-                Topic to publish/subscribe to in order to answer petitions from TB. End it with /
 
-        config TB_RPC_REQUEST_TOPIC
-            string "Thingsboard Request Topic"
-            default "v1/devices/me/rpc/request/+"
+        menu "Server Side RPC"
+    
+            config TB_SS_RPC_RESPONSE_TOPIC
+                string "Thingsboard Server Side Response Topic"
+                default "v1/devices/me/rpc/response/"
+                help
+                    Topic to publish/subscribe to in order to answer petitions from TB. End it with /
+
+            config TB_SS_RPC_REQUEST_TOPIC
+                string "Thingsboard Server Side Request Topic"
+                default "v1/devices/me/rpc/request/+"
+
+        endmenu
+
+        menu "Client Side RPC"
+            config TB_CS_RPC_REQUEST_TOPIC
+                string "Thingsboard Client Side Request Topic"
+                default "v1/devices/me/rpc/request/"
+    
+            config TB_CS_RPC_RESPONSE_TOPIC
+                string "Thingsboard Client Side Response Topic"
+                default "v1/devices/me/rpc/response/+"
+                
+        endmenu
 
     endmenu
 

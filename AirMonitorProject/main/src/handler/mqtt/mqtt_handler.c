@@ -105,6 +105,7 @@ static void _on_connected(){
             mqtt_subscribe_to_topic("v2/sw/response/+");
             mqtt_subscribe_to_topic("v2/fw/response/+");
 
+            
             request_publish_frequency();
 
             #ifdef CONFIG_MQTT_LWT_TOPIC
@@ -215,6 +216,9 @@ void rpc_response_handler(char * payload){
         cJSON *typeItem = cJSON_GetObjectItem(root, "type");
         if(typeItem!=NULL){
             if(strcmp(typeItem->valuestring, "ALL_PUB_FREQ")==0){
+                publish_frequency_response_handler(payload);
+            }
+            else if (strcmp(typeItem->valuestring, "CTX")==0){
                 publish_frequency_response_handler(payload);
             }
         }

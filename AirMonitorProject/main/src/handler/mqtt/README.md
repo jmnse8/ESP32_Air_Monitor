@@ -1,6 +1,6 @@
 # Thingsboard(TB) related stuff
 
-## Register the device in TB: Obtain Access Token
+## Obtain Access Token: Register the device in TB
 In order to send telemetry, the node has to be registered as an entity in TB, a device, that belongs to a certain profile([Device Profile](https://thingsboard.io/docs/user-guide/device-profiles/)). To do so, your node has to send a petition(in this case we use MQTT) by publishing to a certain topic some values and TB will answer with the access_token or an error message.
 
 1. Subscribe to **/provision/response** to receive the response
@@ -13,6 +13,11 @@ In order to send telemetry, the node has to be registered as an entity in TB, a 
         }
 
 1. TB sends a response to **/provision/response**, whether with your access_token or with an error msg.
+
+## Obtain Access Token: Get it through provisioning
+To do this, the device must be already registered at TB. You can do it by hand or through [bulk Provisioning](https://thingsboard.io/docs/user-guide/bulk-provisioning/).
+
+Using the softAP provisioning API, which allows us to add custom data, we can provide the node of its TB access token.
 
 
 

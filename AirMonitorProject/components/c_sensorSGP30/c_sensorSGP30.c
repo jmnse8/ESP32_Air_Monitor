@@ -200,6 +200,7 @@ static void _sensor_send_timer_callback_eco2(void* arg) {
 
         esp_event_post(SENSORSGP30_EVENT_BASE, SENSORSGP30_ECO2_DATA, &eco2, sizeof(eco2), 0);
     }
+    xSemaphoreGive(tvocMutex);
 }
 
 static void _sampling_sensor_timer_callback(void* arg) {
@@ -221,17 +222,19 @@ static void _sampling_sensor_timer_callback(void* arg) {
 }
 
 void sgp30_tvoc_change_send_freq(int sec) {
-    if (sec > SAMPLING_SENSOR_FREQ) {
-        SEND_SENSOR_FREQ_TVOC = sec;
-        ESP_ERROR_CHECK(esp_timer_stop(send_tvoc_sensor_timer));
-        ESP_ERROR_CHECK(esp_timer_start_periodic(send_tvoc_sensor_timer, SEND_SENSOR_FREQ_TVOC * 1000 * 1000));
-    }
+    if(esp_timer_is_active(send_tvoc_sensor_timer))
+        if (sec > SAMPLING_SENSOR_FREQ) {
+            SEND_SENSOR_FREQ_TVOC = sec;
+            ESP_ERROR_CHECK(esp_timer_stop(send_tvoc_sensor_timer));
+            ESP_ERROR_CHECK(esp_timer_start_periodic(send_tvoc_sensor_timer, SEND_SENSOR_FREQ_TVOC * 1000 * 1000));
+        }
 }
 
 void sgp30_eco2_change_send_freq(int sec) {
-    if (sec > SAMPLING_SENSOR_FREQ) {
-        SEND_SENSOR_FREQ_ECO2 = sec;
-        ESP_ERROR_CHECK(esp_timer_stop(send_eco2_sensor_timer));
-        ESP_ERROR_CHECK(esp_timer_start_periodic(send_eco2_sensor_timer, SEND_SENSOR_FREQ_ECO2 * 1000 * 1000));
-    }
+    if(esp_timer_is_active(send_eco2_sensor_timer))
+        if (sec > SAMPLING_SENSOR_FREQ) {
+            SEND_SENSOR_FREQ_ECO2 = sec;
+            ESP_ERROR_CHECK(esp_timer_stop(send_eco2_sensor_timer));
+            ESP_ERROR_CHECK(esp_timer_start_periodic(send_eco2_sensor_timer, SEND_SENSOR_FREQ_ECO2 * 1000 * 1000));
+        }
 }

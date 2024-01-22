@@ -16,8 +16,8 @@ struct tm *tiempo_final;
 static const char* TAG = "DEEP_SLEEP";
 
 
-void configure_sleep(int secondsSleep);
-void configure_awake(int secondsAwake, int secondsSleep);
+static void configure_sleep(int secondsSleep);
+static void configure_awake(int secondsAwake, int secondsSleep);
 //esp_err_t power_manager_init();
 
 //int segundos_finales= FINAL_HOUR*3600 + FINAL_MINUTE*60;
@@ -69,20 +69,22 @@ static void deep_sleep_timer_callback(void* arg) {
     configure_sleep(secondsSleep);
 }
 
-void configure_awake(int secondsAwake, int secondsSleep) {
+static void configure_awake(int secondsAwake, int secondsSleep) {
     const esp_timer_create_args_t timer_args = {
             .callback = &deep_sleep_timer_callback,
             .arg = (void*) secondsSleep,
             .name = "deep_sleep_timer"
     };
     ESP_LOGI(TAG, "seconds awake %i", secondsAwake);
+    ESP_LOGI(TAG, "seconds sleep %i", secondsSleep);
     
     esp_timer_handle_t deep_sleep_timer;
     ESP_ERROR_CHECK(esp_timer_create(&timer_args, &deep_sleep_timer));
     ESP_ERROR_CHECK(esp_timer_start_once(deep_sleep_timer, secondsAwake * 1000 * 1000));
 }
 
-void configure_sleep(int secondsSleep) {
+static void configure_sleep(int secondsSleep) {
+    ESP_LOGI(TAG, "Entering sleep for %i seconds", secondsSleep);
     ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(secondsSleep * 1000 * 1000));
     esp_deep_sleep_start();
 }
@@ -103,38 +105,4 @@ void configure_sleep(int secondsSleep) {
 
     ESP_LOGI("Power Manager", "Init correcto");
     return ESP_OK;
-}*/
-/*
-void check_boot_reason(){
-
-    //esp_log_level_set("*", ESP_LOG_INFO);
-
-    esp_reset_reason_t reset_reason = esp_reset_reason();
-    int N = 30;
-    char reason_str[N];
-
-    switch (reset_reason) {
-        case ESP_RST_POWERON:
-            ESP_LOGI(TAG, "Power-on reset");
-            strncpy(reason_str, "Power-on reset", N-1);
-            break;
-        case ESP_RST_EXT:
-            ESP_LOGI(TAG, "External reset");
-            strncpy(reason_str, "External reset", N-1);
-            break;
-        case ESP_RST_PANIC:
-            ESP_LOGI(TAG, "Exception reset");
-            strncpy(reason_str, "Exception reset", N-1);
-            break;
-        case ESP_RST_DEEPSLEEP:
-            ESP_LOGI(TAG, "Deep sleep reset");
-            strncpy(reason_str, "Deep sleep reset", N-1);
-            break;
-        default:
-            ESP_LOGI(TAG, "Unknown reset reason");
-            strncpy(reason_str, "Unknown reset reason", N-1);
-            break;
-    }
-
-    write_nvs("wakeup_reason", reason_str);
 }*/

@@ -10,6 +10,7 @@
 #include "mqtt_client_side_rpc.h"
 
 static const char* TAG = "CONTEXT";
+static const char *AUX_CTX = "CONTEXTO PROVISIONAL";
 
 static char *NODE_CONTEXT = NULL;
 char *NODE_TB_ACCESS_TOKEN = NULL;
@@ -24,6 +25,10 @@ int NODE_STATUS = NODE_STATE_BLANK;
 
 int context_check_sw_version(const char* ver){
     return strcmp(NODE_SW_VERSION, ver) < 0;
+}
+
+int context_is_invalid_ctx(){
+    return strcmp(NODE_CONTEXT, AUX_CTX)==0;
 }
 
 void context_reset(){
@@ -84,7 +89,6 @@ int context_refresh_node_status(int status){
         }
     }
 
-    printf("\nNODE_STATUS IS %d\n", NODE_STATUS);
     return NODE_STATUS;
 }
 
@@ -137,7 +141,6 @@ void context_set_node_ctx(char *c, int save){
 
         ESP_LOGI(TAG, "NODE_CONTEXT IS NOW %s", NODE_CONTEXT);
 
-        _esp_restart();
     }
 }
 
@@ -145,8 +148,7 @@ char *context_get_node_ctx(){
     if(NODE_CONTEXT==NULL){
         if(nvs_read_string(CONFIG_NVS_KEY_TB_CTX, &NODE_CONTEXT)!=NVS_OK){
             ESP_LOGE(TAG, "Ctx is not in nvs.");
-            request_node_context();
-            context_set_node_ctx("CONTEXTO PROVISIONAL", 0);
+            context_set_node_ctx(AUX_CTX, 0);
         }
         else{
             ESP_LOGD(TAG, "NVS_KEY_TB_CTX = %s\n", NODE_CONTEXT);

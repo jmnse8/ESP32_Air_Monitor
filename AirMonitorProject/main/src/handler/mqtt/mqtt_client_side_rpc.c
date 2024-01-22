@@ -49,7 +49,7 @@ void publish_frequency_response_handler(char * payload){
 void request_node_context(){
     cJSON *root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "method", "G_CTX");
-    //cJSON_AddItemToObject(root, "params", NULL);
+    cJSON_AddItemToObject(root, "params", NULL);
     char *data = cJSON_Print(root);
 
     char buf[10];

@@ -96,18 +96,19 @@ static void _on_connected(){
             _signup2tb();
             break;
         case NODE_STATE_REGULAR:
+            //https://thingsboard.io/docs/reference/mqtt-api/
             mqtt_subscribe_to_topic(CONFIG_TB_SS_RPC_REQUEST_TOPIC);
             mqtt_subscribe_to_topic(CONFIG_TB_CS_RPC_RESPONSE_TOPIC);
-            //https://thingsboard.io/docs/reference/mqtt-api/
-            mqtt_subscribe_to_topic("v1/devices/me/attributes/response/+");
-            mqtt_subscribe_to_topic("v1/devices/me/attributes");
+            mqtt_subscribe_to_topic(CONFIG_TB_ATTR_RESPONSE_TOPIC);
+            mqtt_subscribe_to_topic(CONFIG_TB_ATTR_TOPIC);
+            mqtt_subscribe_to_topic(CONFIG_TB_OTA_FW_TOPIC);
+            mqtt_subscribe_to_topic(CONFIG_TB_OTA_SW_TOPIC);
 
-            mqtt_subscribe_to_topic("v2/sw/response/+");
-            mqtt_subscribe_to_topic("v2/fw/response/+");
-
-            
             request_publish_frequency();
 
+            if(context_is_invalid_ctx()){
+                request_node_context();
+            }
             #ifdef CONFIG_MQTT_LWT_TOPIC
             mqtt_subscribe_to_topic(CONFIG_MQTT_LWT_TOPIC);
             #endif
@@ -219,7 +220,7 @@ void rpc_response_handler(char * payload){
                 publish_frequency_response_handler(payload);
             }
             else if (strcmp(typeItem->valuestring, "CTX")==0){
-                publish_frequency_response_handler(payload);
+                ctx_response_handler(payload);
             }
         }
     }

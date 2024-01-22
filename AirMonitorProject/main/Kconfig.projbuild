@@ -61,7 +61,34 @@ menu "Com MQTT - Thingsboard Configuration"
             config TB_CS_RPC_RESPONSE_TOPIC
                 string "Thingsboard Client Side Response Topic"
                 default "v1/devices/me/rpc/response/+"
-                
+        endmenu
+
+        menu "Attributes"
+            config TB_ATTR_TOPIC
+                string "Thingsboard Attributes Request Topic"
+                default "v1/devices/me/attributes"
+                help
+                    Topic to subscribe to receive attribute updates
+    
+            config TB_ATTR_RESPONSE_TOPIC
+                string "Thingsboard Attributes Response Topic"
+                default "v1/devices/me/attributes/response/+"
+                help
+                    Topic to subscribe to
+        endmenu
+
+        menu "OTA"
+            config TB_OTA_FW_TOPIC
+                string "Thingsboard OTA Firmware Topic"
+                default "v2/fw/response/+"
+                help
+                    Topic to subscribe to to receive ota firmware updates
+    
+            config TB_OTA_SW_TOPIC
+                string "Thingsboard OTA Software Topic"
+                default "v2/sw/response/+"
+                help
+                    Topic to subscribe to to receive ota software updates
         endmenu
 
     endmenu

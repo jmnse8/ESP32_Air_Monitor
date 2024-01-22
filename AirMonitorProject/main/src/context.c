@@ -7,6 +7,7 @@
 
 #include "c_nvs.h"
 #include "c_provisioning.h"
+#include "mqtt_client_side_rpc.h"
 
 static const char* TAG = "CONTEXT";
 
@@ -135,14 +136,16 @@ void context_set_node_ctx(char *c, int save){
             nvs_write_string(CONFIG_NVS_KEY_TB_CTX, NODE_CONTEXT);
 
         ESP_LOGI(TAG, "NODE_CONTEXT IS NOW %s", NODE_CONTEXT);
+
+        _esp_restart();
     }
 }
 
 char *context_get_node_ctx(){
     if(NODE_CONTEXT==NULL){
         if(nvs_read_string(CONFIG_NVS_KEY_TB_CTX, &NODE_CONTEXT)!=NVS_OK){
-            if(NODE_STATUS==NODE_STATE_REGULAR)
-                ESP_LOGE(TAG, "Ctx is not in nvs. Setting provisional value to: CONTEXTO PROVISIONAL");
+            ESP_LOGE(TAG, "Ctx is not in nvs.");
+            request_node_context();
             context_set_node_ctx("CONTEXTO PROVISIONAL", 0);
         }
         else{
@@ -150,10 +153,6 @@ char *context_get_node_ctx(){
         }
     }
     return NODE_CONTEXT;
-}
-
-int context_it_is_i(char * ctx){
-    return strncmp(NODE_CONTEXT, ctx, strlen(NODE_CONTEXT));
 }
 
 int context_get_onoff(){

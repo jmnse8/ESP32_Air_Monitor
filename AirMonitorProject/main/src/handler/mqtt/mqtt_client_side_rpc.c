@@ -4,8 +4,21 @@
 #include "sensor_handler.h"
 
 #include "mqtt_client_side_rpc.h"
+#include "context.h"
 
 static int requestId = 0;
+
+void ctx_response_handler(char * payload){
+    cJSON* root = cJSON_Parse(payload);
+    if (root != NULL){
+    
+        cJSON *ctxItem = cJSON_GetObjectItem(root, "ctx");
+        if(ctxItem!=NULL){
+            context_set_node_ctx(ctxItem->valuestring, 1);
+        }
+    }
+    cJSON_Delete(root);
+}
 
 void publish_frequency_response_handler(char * payload){
     cJSON* root = cJSON_Parse(payload);
@@ -27,11 +40,23 @@ void publish_frequency_response_handler(char * payload){
         if(tvoc_freqItem!=NULL){
             handler_set_publish_frequency(tvoc_freqItem->valueint, SGP30_TVOC);
         }
-        
-        
     }
     cJSON_Delete(root);
 
+}
+
+
+void request_node_context(){
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "method", "G_CTX");
+    //cJSON_AddItemToObject(root, "params", NULL);
+    char *data = cJSON_Print(root);
+
+    char buf[10];
+    sprintf(buf, "%d", requestId);
+    
+    mqtt_publish_to_topic(build_topic(CONFIG_TB_CS_RPC_REQUEST_TOPIC, buf), (void *)data, strlen(data));
+    requestId++;
 }
 
 void request_publish_frequency(){
@@ -43,7 +68,6 @@ void request_publish_frequency(){
     char buf[10];
     sprintf(buf, "%d", requestId);
     
-    mqtt_publish_to_topic("v1/devices/me/rpc/request/1", (void *)data, strlen(data));
-    //mqtt_publish_to_topic(build_topic(CONFIG_TB_CS_RPC_REQUEST_TOPIC, buf), NULL, 0);
+    mqtt_publish_to_topic(build_topic(CONFIG_TB_CS_RPC_REQUEST_TOPIC, buf), (void *)data, strlen(data));
     requestId++;
 }

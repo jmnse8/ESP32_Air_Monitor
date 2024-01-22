@@ -1,0 +1,61 @@
+menu "SI7021 I2C Peripheral Configuration"
+
+    menu "I2C Master"
+        config I2C_MASTER_SCL
+            int "SCL GPIO Num"
+            default 27
+            help
+                GPIO number for I2C Master clock line.
+
+        config I2C_MASTER_SDA
+            int "SDA GPIO Num"
+            default 26
+            help
+                GPIO number for I2C Master data line.
+
+        config I2C_MASTER_PORT_NUM
+            int "Port Number"
+            default 0
+            help
+                Port number for I2C Master device.
+
+        config I2C_MASTER_FREQUENCY
+            int "Master Frequency"
+            default 400000
+            help
+                I2C Speed of Master device.
+    endmenu
+
+    menu "Sensor"
+
+        config SAMPLING_SENSOR_FREQ_TEMP
+            int "Temperature sensor sampling rate in seconds"
+            range 1 100
+            default 2
+            help
+                Rate at which a sensor collects data in seconds.
+
+        config SAMPLING_SENSOR_FREQ_HUM
+            int "Humidity sensor sampling rate in seconds"
+            range 1 100
+            default 2
+            help
+                Rate at which a sensor collects data in seconds.
+
+        config SEND_SENSOR_FREQ_TEMP
+            int "Temperature sensor send rate in seconds"
+            range 1 100
+            default 10
+            help
+                Rate at which a sensor collects data in seconds.
+
+        config SEND_SENSOR_FREQ_HUM
+            int "Humidity sensor send rate in seconds"
+            range 1 100
+            default 10
+            help
+                Rate at which a sensor collects data in seconds.
+        
+    endmenu
+
+endmenu

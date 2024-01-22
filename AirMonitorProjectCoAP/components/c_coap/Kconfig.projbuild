@@ -1,0 +1,9 @@
+menu "Com COAP Configuration"
+
+    config COAP_HOST_NAME
+        string "Host name"
+        default "loaclhost"
+        help
+            hostname of the server
+
+endmenu

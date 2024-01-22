@@ -7,6 +7,8 @@
 #include "context.h"
 
 static int requestId = 0;
+static const char *RPC_CTX_METHOD = "G_CTX";
+static const char *RPC_ALL_FREQ_METHOD = "G_PUB_FREQ";
 
 void ctx_response_handler(char * payload){
     cJSON* root = cJSON_Parse(payload);
@@ -48,7 +50,7 @@ void publish_frequency_response_handler(char * payload){
 
 void request_node_context(){
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "method", "G_CTX");
+    cJSON_AddStringToObject(root, "method", RPC_CTX_METHOD);
     cJSON_AddItemToObject(root, "params", NULL);
     char *data = cJSON_Print(root);
 
@@ -61,7 +63,7 @@ void request_node_context(){
 
 void request_publish_frequency(){
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "method", "G_PUB_FREQ");
+    cJSON_AddStringToObject(root, "method", RPC_ALL_FREQ_METHOD);
     cJSON_AddItemToObject(root, "params", NULL);
     char *data = cJSON_Print(root);
 

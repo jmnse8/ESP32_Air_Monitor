@@ -12,11 +12,9 @@ char * build_TB_prov_request();
 void coap_init(){
     coap_start_client();
     char * token = context_get_node_tb_token();
-    //ESP_LOGI("pepe", "%s", token);
     if (token == NULL) {
         ESP_LOGI("coapHND", "El token de nvs era nulo");
         coap_client_provision_send(build_TB_prov_request());
-        //ESP_LOGI("pepe", "holaaa2");
     }
     else {
         ESP_LOGI("coapHND", "El token de nvs NO era nulo %s", token);

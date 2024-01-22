@@ -12,6 +12,7 @@
 #include "c_sensorSI7021.h"
 #include "c_coap.h"
 #include "c_sntp.h"
+#include "c_deepSleep.h"
 
 #include "c_nvs.h"
 #include "context.h"
@@ -48,11 +49,11 @@ void setup(){
 
     init_event_handlers();
     wifi_init();
-    //mqtt_init();
-    coap_init();
+    //coap_init();
 
-    //sntp_sync_time_init();
-    si7021_init_sensor();
-    sgp30_init_sensor();
+    sntp_sync_time_init();
+    init_deep_sleep();
+    //si7021_init_sensor();
+    //sgp30_init_sensor();
 }
 

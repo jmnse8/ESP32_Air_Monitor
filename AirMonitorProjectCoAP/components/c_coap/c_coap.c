@@ -5,19 +5,6 @@
 #include "c_coap.h"
 
 #include <coap3/coap.h>
-/*
-#include <string.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <sys/param.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <freertos/event_groups.h>
-#include <esp_log.h>
-#include <esp_event.h>
-#include <lwip/sockets.h>
-#include <coap3/coap.h>
-#include "c_coap.h"*/
 
 static const char *TAG = "C_COAP";
 ESP_EVENT_DEFINE_BASE(C_COAP_EVENT_BASE);
@@ -25,7 +12,6 @@ ESP_EVENT_DEFINE_BASE(C_COAP_EVENT_BASE);
 static coap_uri_t uri;
 static coap_context_t *ctx = NULL;
 static coap_session_t *session = NULL;
-//static coap_optlist_t *optlist = NULL;
 
 static char *DEVICE_TOKEN = NULL;
 
@@ -41,7 +27,7 @@ static void coap_log_handler (coap_log_t level, const char *message);
 static coap_response_t message_handler(coap_session_t *session, const coap_pdu_t *sent, const coap_pdu_t *received, const coap_mid_t mid);
 
 void coap_start_client(){
-    char       *server_uri = NULL;// = "coaps://" CONFIG_COAP_HOST_NAME ":5684";
+    char       *server_uri = NULL;
 
     /* if (!coap_dtls_is_supported()) {
         ESP_LOGE(TAG, "Coap DTLS not supported");
@@ -61,19 +47,15 @@ void coap_start_client(){
         ESP_LOGE(TAG, "coap_new_context() failed");
         //goto clean_up;
     }
-    //coap_context_set_block_mode(ctx, COAP_BLOCK_USE_LIBCOAP|COAP_BLOCK_SINGLE_BODY);
 
     coap_register_response_handler(ctx, message_handler);
     xTaskCreate(coap_io_process_callback, "coap_io_process task", 6144, NULL, 6, NULL);
 
     if (coap_split_uri((const uint8_t *)server_uri, strlen(server_uri), &uri) == -1) {
         ESP_LOGE(TAG, "CoAP server uri error");
-        //goto clean_up;
     }
     
     coap_address_t *dst_addr = coap_get_address(&uri);
-    //if (!dst_addr)
-        //goto clean_up;
 
     session = coap_new_client_session(ctx, NULL, dst_addr,
                                           uri.scheme == COAP_URI_SCHEME_COAP_TCP ? COAP_PROTO_TCP :
@@ -81,7 +63,6 @@ void coap_start_client(){
 
     if (!session) {
         ESP_LOGE(TAG, "coap_new_client_session() failed");
-        //goto clean_up;
     }
 }
 

@@ -1,6 +1,7 @@
 #ifndef __CONTEXT_H
 #define __CONTEXT_H
 
+
 enum {
     CONTEXT_OFF = 0,
     CONTEXT_ON = 1
@@ -55,6 +56,9 @@ enum NODE_STATE_ENUM{
 extern int NODE_STATUS;
 extern char *NODE_TB_TOKEN;
 extern char *NODE_SW_VERSION;
+
+
+int context_is_invalid_ctx();
 
 /**
  * @brief Check & Refresh node's current status.

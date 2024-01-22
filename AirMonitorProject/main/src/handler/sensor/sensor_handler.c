@@ -7,7 +7,7 @@
 
 static const char* TAG = "SENSOR_HANDLER";
 
-static int SENSOR_PUB_FREQ = 10;
+//static int SENSOR_PUB_FREQ = 10;
 
 enum TB_SENSOR_PIN {
     TB_SENSOR_PIN_TMP = 1,
@@ -147,10 +147,25 @@ int char2bool(char c){
 }
 
 
-void handler_set_publish_frequency(int freq){
-    SENSOR_PUB_FREQ = freq;
-    printf("\nSENSOR_PUB_FREQ = %d\n", SENSOR_PUB_FREQ);
-    //TODO: Implementa la funcion para cambiar el timer de envío aqui
+void handler_set_publish_frequency(int freq, int sensor){
+    switch(sensor){
+        case SI7021_TMP:
+            si7021_temp_change_send_freq(freq);
+            ESP_LOGI(TAG, "SI7021 TEMP PUBLISH FREQ SET TO %d", freq);
+        break;
+        case SI7021_HUM:
+            si7021_hum_change_send_freq(freq);
+            ESP_LOGI(TAG, "SI7021 HUM PUBLISH FREQ SET TO %d", freq);
+        break;
+        case SGP30_ECO2:
+            sgp30_eco2_change_send_freq(freq);
+            ESP_LOGI(TAG, "SGP30 ECO2 PUBLISH FREQ SET TO %d", freq);
+        break;
+        case SGP30_TVOC:
+            sgp30_tvoc_change_send_freq(freq);
+            ESP_LOGI(TAG, "SGP30 TVOC PUBLISH FREQ SET TO %d", freq);
+        break;
+    }
 }
 
 void handler_get_sensor_stat(char *request_id){
@@ -166,7 +181,7 @@ void handler_get_sensor_stat(char *request_id){
     cJSON_AddBoolToObject(root, "4", char2bool(status[3]));
     
     char *data = cJSON_Print(root);
-    mqtt_publish_to_topic(build_topic(CONFIG_TB_RPC_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
+    mqtt_publish_to_topic(build_topic(CONFIG_TB_SS_RPC_RESPONSE_TOPIC, request_id), (uint8_t*)data, strlen(data));
 
     free((void*)data);
     free(si7021_mode);

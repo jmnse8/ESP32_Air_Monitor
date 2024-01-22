@@ -178,11 +178,17 @@ int _parse_ota_topic(const cJSON* root){
 
 int parse_topic(const char *topic){
 
+    char * rpc_resp = "v1/devices/me/rpc/response/";
+    int len = strlen(rpc_resp);
+
     if (strcmp(topic, "v1/devices/me/attributes") == 0) {
         return TB_TOPIC_ATTR_REQ;
     } 
     else if (strcmp(topic, "v1/devices/me/attributes/response") == 0) {
         return TB_TOPIC_ATTR_RESP;
+    } 
+    else if (strncmp(topic, rpc_resp, len) == 0) {
+        return TB_TOPIC_RPC_RESP;
     } 
     else if (strcmp(topic, "/provision/response") == 0){
         return TB_TOPIC_PROV_RESP;

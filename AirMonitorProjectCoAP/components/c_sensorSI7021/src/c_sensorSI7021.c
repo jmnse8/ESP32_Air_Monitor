@@ -222,7 +222,6 @@ static void _sampling_sensor_timer_callback_temp(void* arg) {
         xSemaphoreTake(tempMutex, portMAX_DELAY);
         tempData.sum += temp;
         tempData.counter++;
-        ESP_LOGI(TAG, "TEMP_DATA: suma %f contador: %i",  tempData.sum, tempData.counter);
         xSemaphoreGive(tempMutex);
     }
 }
@@ -235,7 +234,6 @@ static void _sampling_sensor_timer_callback_hum(void* arg) {
         xSemaphoreTake(humMutex, portMAX_DELAY);
         humData.sum += hum;
         humData.counter++;
-        ESP_LOGI(TAG, "HUM_DATA: suma %f contador: %i",  humData.sum, humData.counter);
         xSemaphoreGive(humMutex);
     }
 }

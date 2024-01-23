@@ -80,12 +80,14 @@ static void configure_awake(int secondsAwake, int secondsSleep) {
     
     esp_timer_handle_t deep_sleep_timer;
     ESP_ERROR_CHECK(esp_timer_create(&timer_args, &deep_sleep_timer));
-    ESP_ERROR_CHECK(esp_timer_start_once(deep_sleep_timer, secondsAwake * 1000 * 1000));
+    uint64_t auxSecondsAwake = secondsAwake;
+    ESP_ERROR_CHECK(esp_timer_start_once(deep_sleep_timer, auxSecondsAwake * 1000 * 1000));
 }
 
 static void configure_sleep(int secondsSleep) {
     ESP_LOGI(TAG, "Entering sleep for %i seconds", secondsSleep);
-    ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(secondsSleep * 1000 * 1000));
+    uint64_t auxSecondsSleep = secondsSleep;
+    ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(auxSecondsSleep * 1000 * 1000));
     esp_deep_sleep_start();
 }
 

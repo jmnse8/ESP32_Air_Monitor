@@ -195,6 +195,8 @@ esp_err_t coap_client_provision_send(char * data) {
         ESP_LOGE(TAG, "Error en coap_send()");
         return ESP_FAIL;
     }
+    ESP_LOGI(TAG, "Se lo he enviado");
+
     return ESP_OK;
 }
 

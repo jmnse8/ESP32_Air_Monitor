@@ -49,11 +49,10 @@ void setup(){
 
     init_event_handlers();
     wifi_init();
-    //coap_init();
+    coap_init();
 
     sntp_sync_time_init();
     init_deep_sleep();
-    //si7021_init_sensor();
-    //sgp30_init_sensor();
+    si7021_init_sensor();
+    sgp30_init_sensor();
 }
-

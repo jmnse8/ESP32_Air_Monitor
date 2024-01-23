@@ -24,6 +24,7 @@
 #include "c_spiffs.h"
 
 #include "esp_log.h"
+#include "c_ble.h"
 
 
 static void init_event_handlers(){
@@ -42,7 +43,10 @@ static void init_event_handlers(){
     ESP_ERROR_CHECK(esp_event_handler_register(SENSORSI7021_EVENT_BASE, SENSORSI7021_HUM_DATA, sensorSI7021_event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(SENSORSGP30_EVENT_BASE, SENSORSGP30_TVOC_DATA, sensorSGP30_event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(SENSORSGP30_EVENT_BASE, SENSORSGP30_ECO2_DATA, sensorSGP30_event_handler, NULL));
-    
+
+    // BLE
+    ESP_ERROR_CHECK(esp_event_handler_register(C_BLE_EVENT_BASE, C_BLE_EVENT_ATTENDANCE, provisioning_handler, NULL));
+
 }
 
 
@@ -60,13 +64,13 @@ void setup(){
 
     int status = context_refresh_node_status(NULL);
     init_event_handlers();
-
-    if(status!=NODE_STATE_PROV){
-        //wifi_init();
-        mqtt_init();
-        si7021_init_sensor();
-    }
-
+    ble_init();
+    //if(status!=NODE_STATE_PROV){
+      //  wifi_init();
+      //  mqtt_init();
+      //  si7021_init_sensor();
+    //}
+    
     //sntp_sync_time_init();
     //init_deep_sleep();
     //sgp30_init_sensor();

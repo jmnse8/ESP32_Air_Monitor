@@ -126,7 +126,17 @@ void printDevice(const Device* head) {
         current = current->next;
     }
     ESP_LOGI(GATTC_TAG,"headcount: %d ", headcount);
-    esp_event_post(C_BLE_EVENT_BASE, C_BLE_EVENT_ATTENDANCE, (int *)headcount, 0, 0);
+    int len = (int)((ceil(log10(headcount))+1)*sizeof(char));
+    char *buf;
+
+    if(len <= 1)
+        len = 2;
+
+    buf = malloc(len);
+    snprintf(buf, len, "%d", headcount);
+    buf[len - 1] = '\0';
+
+    esp_event_post(C_BLE_EVENT_BASE, C_BLE_EVENT_ATTENDANCE, buf, len, 0);
 }
 
 // Función para calcular la distancia en metros basada en RSSI
@@ -518,18 +528,10 @@ static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp
 
 void ble_init(void)
 {
-    // Initialize NVS.
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK( ret );
-
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-    ret = esp_bt_controller_init(&bt_cfg);
+    esp_err_t ret = esp_bt_controller_init(&bt_cfg);
     if (ret) {
         ESP_LOGE(GATTC_TAG, "%s initialize controller failed: %s\n", __func__, esp_err_to_name(ret));
         return;

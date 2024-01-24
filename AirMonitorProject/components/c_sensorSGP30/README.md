@@ -4,8 +4,6 @@ The main code is in c_sensorSGP30.c and c_sensorSGP30.h
 
 Interfaces ESP32 with SGP30 Air Quality Sensor via I²C.
 
-Based on [Adafruit SGP30 Library](https://github.com/adafruit/Adafruit_SGP30).
-
 - **TVOC**: Total Volatile Organic Compounds in ppb
 - **eCO2**: CO2 in ppm
 

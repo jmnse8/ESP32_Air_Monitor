@@ -21,3 +21,9 @@ Sistema de monitorización de la calidad del aire con ESP32
 
 ### I2C
 [Enlace a **readme**](AirMonitorProject/components/c_I2C/README.md)
+
+### Bluetooth
+
+Since it wouldn't fit in the main branch with OTA, the Bluetooth component for the people counter is located in a different branch. (feature/PI-21)
+
+[Enlace a rama](../../feature/PI-21)

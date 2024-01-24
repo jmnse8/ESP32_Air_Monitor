@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include "c_deepSleep.h"
 
-#define START_HOUR  CONFIG_START_HOUR*3600 + CONFIG_START_MINUTE*60
-
-//#define START_MINUTE CONFIG_START_MINUTE
-
-#define FINAL_HOUR  CONFIG_FINAL_HOUR*3600 + CONFIG_FINAL_MINUTE*60
+int START_HOUR  = CONFIG_START_HOUR*3600 + CONFIG_START_MINUTE*60;
+int FINAL_HOUR = CONFIG_FINAL_HOUR*3600 + CONFIG_FINAL_MINUTE*60;
 
 time_t now;
 struct tm *nowTime;
@@ -19,9 +16,6 @@ static const char* TAG = "DEEP_SLEEP";
 static void configure_sleep(int secondsSleep);
 static void configure_awake(int secondsAwake, int secondsSleep);
 //esp_err_t power_manager_init();
-
-//int segundos_finales= FINAL_HOUR*3600 + FINAL_MINUTE*60;
-//int segundos_iniciales= HORA_INICIO*3600 + MINUTOS_INICIO*60;
 
 void init_deep_sleep(void) {
     time(&now); // Obtener el tiempo actual

@@ -1,5 +1,6 @@
-# Proyecto-final
-Sistema de monitorización de la calidad del aire con ESP32
+# Air Quality Monitoring System with ESP32
+
+The main project is the one named **AirMonitorProject**, the other is only for *CoAP*.
 
 ### MQTT
 [Enlace a **readme**](AirMonitorProject/components/c_mqtt/README.md)

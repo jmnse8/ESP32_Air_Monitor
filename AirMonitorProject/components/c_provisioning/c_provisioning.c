@@ -258,6 +258,6 @@ void provisioning_init(void)
         /* Wait for Wi-Fi connection */
         xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, true, true, portMAX_DELAY);
     }
-
+    esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
 
 }

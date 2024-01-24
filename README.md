@@ -27,4 +27,4 @@ The main project is the one named **AirMonitorProject**, the other is only for *
 
 Since it wouldn't fit in the main branch with OTA, the Bluetooth component for the people counter is located in a different branch. (feature/PI-21)
 
-[Enlace a rama](../../feature/PI-21)
+[Enlace a rama](https://github.com/jmnse8/Proyecto-final/tree/feature/PI-21)

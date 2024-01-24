@@ -7,11 +7,7 @@ int FINAL_HOUR = CONFIG_FINAL_HOUR*3600 + CONFIG_FINAL_MINUTE*60;
 time_t now;
 struct tm *nowTime;
 
-time_t momento_final;
-struct tm *tiempo_final;
-
 static const char* TAG = "DEEP_SLEEP";
-
 
 static void configure_sleep(int secondsSleep);
 static void configure_awake(int secondsAwake, int secondsSleep);
@@ -20,39 +16,47 @@ static void configure_awake(int secondsAwake, int secondsSleep);
 void init_deep_sleep(void) {
     time(&now); // Obtener el tiempo actual
     nowTime = localtime(&now);
-    
-    int ACTUAL_HOUR = nowTime->tm_hour*3600 + nowTime->tm_min*60 + nowTime->tm_sec;
 
-    if(START_HOUR < FINAL_HOUR) {//Caso normal
-        if(ACTUAL_HOUR > START_HOUR && ACTUAL_HOUR < FINAL_HOUR){// toca estar despierto
-            configure_awake(FINAL_HOUR - ACTUAL_HOUR, (86400 - FINAL_HOUR) + START_HOUR);
+    if (nowTime->tm_year < (2016 - 1900)) {
+        ESP_LOGI(TAG, "Time is not set yet. DeepSleep in default mode");
+        configure_awake(50400, 36000);//Awake 14 h and sleep 10
+    }
+    else{
+        int ACTUAL_HOUR = nowTime->tm_hour*3600 + nowTime->tm_min*60 + nowTime->tm_sec;
+
+        if(START_HOUR < FINAL_HOUR) {//Caso normal
+            if(ACTUAL_HOUR > START_HOUR && ACTUAL_HOUR < FINAL_HOUR){// toca estar despierto
+                configure_awake(FINAL_HOUR - ACTUAL_HOUR, (86400 - FINAL_HOUR) + START_HOUR);
+            }
+            else{// toca dormir
+                int secondsSleep = 0;
+                if(ACTUAL_HOUR > FINAL_HOUR) {
+                    secondsSleep = (86400 - ACTUAL_HOUR) + START_HOUR;
+                }
+                else{
+                    secondsSleep = START_HOUR - ACTUAL_HOUR;
+                }
+                configure_sleep(secondsSleep);
+            }
         }
-        else{// toca dormir
-            int secondsSleep = 0;
-            if(ACTUAL_HOUR > FINAL_HOUR) {
-                secondsSleep = (86400 - ACTUAL_HOUR) + START_HOUR;
+        else {// caso especial
+            if(ACTUAL_HOUR < START_HOUR && ACTUAL_HOUR > FINAL_HOUR){// toca dormir
+                configure_sleep((START_HOUR - ACTUAL_HOUR));
             }
-            else{
-                secondsSleep = START_HOUR - ACTUAL_HOUR;
+            else{// toca estar despierto
+                int secondsAwake = 0;
+                if(ACTUAL_HOUR > START_HOUR) {
+                    secondsAwake = (86400 - ACTUAL_HOUR) + FINAL_HOUR;
+                }
+                else {
+                    secondsAwake = FINAL_HOUR - ACTUAL_HOUR;
+                }
+                configure_awake(secondsAwake, START_HOUR - FINAL_HOUR);
             }
-            configure_sleep(secondsSleep);
         }
     }
-    else {// caso especial
-        if(ACTUAL_HOUR < START_HOUR && ACTUAL_HOUR > FINAL_HOUR){// toca dormir
-            configure_sleep((START_HOUR - ACTUAL_HOUR));
-        }
-        else{// toca estar despierto
-            int secondsAwake = 0;
-            if(ACTUAL_HOUR > START_HOUR) {
-                secondsAwake = (86400 - ACTUAL_HOUR) + FINAL_HOUR;
-            }
-            else {
-                secondsAwake = FINAL_HOUR - ACTUAL_HOUR;
-            }
-            configure_awake(secondsAwake, START_HOUR - FINAL_HOUR);
-        }
-    }
+    
+    
 
     //power_manager_init();
 }
@@ -85,7 +89,7 @@ static void configure_sleep(int secondsSleep) {
     esp_deep_sleep_start();
 }
 
-/*esp_err_t power_manager_init(){
+/* esp_err_t power_manager_init(){
     //configuracion parametros
     esp_pm_config_t power_config={
         .max_freq_mhz=240,
@@ -101,4 +105,4 @@ static void configure_sleep(int secondsSleep) {
 
     ESP_LOGI("Power Manager", "Init correcto");
     return ESP_OK;
-}*/
+} */

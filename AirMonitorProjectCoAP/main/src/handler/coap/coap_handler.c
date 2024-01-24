@@ -59,7 +59,7 @@ char *get_access_token_TB_responseC(char *payload){
 
 char * build_TB_prov_request(){
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "deviceName", "esp32Coap5");
+    cJSON_AddStringToObject(root, "deviceName", "esp32Coap7");
     cJSON_AddStringToObject(root, "provisionDeviceKey", "d01bk1lk8fsi5gr67xdl");
     cJSON_AddStringToObject(root, "provisionDeviceSecret", "5kln5xcz73euzgecvu6o");
 

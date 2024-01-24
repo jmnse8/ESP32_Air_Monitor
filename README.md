@@ -1,26 +1,23 @@
 # Proyecto-final
 Sistema de monitorización de la calidad del aire con ESP32
 
-### SGP 30
-
-TVOC: Total Volatile Organic Compounds in ppb
-eCO2: CO2 in ppm
-
-Componente SGP30 basado en:
-
-https://github.com/co-env/esp32_SGP30
-
-https://github.com/adafruit/Adafruit_SGP30
-
-## Definición de FSM
-
-### Estados
-
-- Sin wifi : 
-
-- provisionando: 
-
-- Provisionado:
-
 ### MQTT
-[Mira este readme](AirMonitorProject/components/c_mqtt/README.md)
+[Enlace a **readme**](AirMonitorProject/components/c_mqtt/README.md)
+
+### CoAP
+[Enlace a **readme**](AirMonitorProjectCOAP/README.md)
+
+### DEEP SLEEP
+[Enlace a **readme**](AirMonitorProject/components/c_deepSleep/README.md)
+
+### SNTP
+[Enlace a **readme**](AirMonitorProject/components/c_sntp/README.md)
+
+### SGP30
+[Enlace a **readme**](AirMonitorProject/components/c_sensorSGP30/README.md)
+
+### SI7021
+[Enlace a **readme**](AirMonitorProject/components/c_sensorSI7021/README.md)
+
+### I2C
+[Enlace a **readme**](AirMonitorProject/components/c_I2C/README.md)

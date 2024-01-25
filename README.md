@@ -25,4 +25,4 @@ The main project is the one named **AirMonitorProject**, the other is only for *
 
 ### BLE
 
-[Enlace a **readme**](AirMonitorProject/components/c_ble/README.md)
+[Enlace a **readme**](AirMonitorProject/components/c_ble/Readme.md)

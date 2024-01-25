@@ -1,0 +1,21 @@
+menu "Com SPIFFS Menu"
+
+    config SPIFFS_CHECK_ON_START
+        bool "Run SPIFFS_check on every start-up"
+        default y
+        help
+            If this config item is set, esp_spiffs_check() will be run on every start-up.
+            Slow on large flash sizes.
+
+    config SPIFFS_LOG_FILE
+        string "Filename of the file that will store LOG entries"
+        default "log.txt"
+
+    config SPIFFS_DIRECTORY
+        string "SPIFFS Directory"
+        default "/spiffs"
+        help
+            Start with /
+    
+
+endmenu

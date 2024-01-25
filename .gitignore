@@ -54,4 +54,12 @@ dkms.conf
 **/build/
 **/.vscode/
 **/.devcontainer/
+**/.idea/
 **/sdkconfig
+**/sdkconfig.old
+**/managed_components
+*.lock
+
+Thingsboard
+
+*.pem

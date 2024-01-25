@@ -1,0 +1,168 @@
+menu "Com MQTT - Thingsboard Configuration"
+
+    menu "Provisioning"
+
+        config TB_PROVISION_USERNAME
+            string "Thingsboard provision Username"
+            default "provision"
+
+        config TB_PROVISION_DEVICE_KEY
+            string "Thingsboard device profile's provision key"
+            default "2lkpfzzf7bpy74iwzn66"
+            help
+                Look at Device profiles -> select device -> Device provisioning
+
+        config TB_PROVISION_DEVICE_SECRET
+            string "Thingsboard device profile's provision secret"
+            default "03mt3l6srz9bijscmr9n"
+            help
+                Look at Device profiles -> select device -> Device provisioning
+            
+        config TB_PROVISION_REQUEST_TOPIC
+            string "Thingsboard provision request Topic"
+            default "/provision/request"
+            help
+                Topic to publish your provisioning request
+    
+        config TB_PROVISION_RESPONSE_TOPIC
+            string "Thingsboard provision response Topic"
+            default "/provision/response"
+            help
+                Topic to subscribe to in order to receive the provision request's answer
+    
+    endmenu
+
+    menu "Communication"
+        config TB_TELEMETRY_TOPIC
+            string "Thingsboard Telemetry Topic"
+            default "v1/devices/me/telemetry"
+            help
+                Topic to publish/subscribe to in order to send telemetry to TB
+
+        menu "Server Side RPC"
+    
+            config TB_SS_RPC_RESPONSE_TOPIC
+                string "Thingsboard Server Side Response Topic"
+                default "v1/devices/me/rpc/response/"
+                help
+                    Topic to publish/subscribe to in order to answer petitions from TB. End it with /
+
+            config TB_SS_RPC_REQUEST_TOPIC
+                string "Thingsboard Server Side Request Topic"
+                default "v1/devices/me/rpc/request/+"
+
+        endmenu
+
+        menu "Client Side RPC"
+            config TB_CS_RPC_REQUEST_TOPIC
+                string "Thingsboard Client Side Request Topic"
+                default "v1/devices/me/rpc/request/"
+    
+            config TB_CS_RPC_RESPONSE_TOPIC
+                string "Thingsboard Client Side Response Topic"
+                default "v1/devices/me/rpc/response/+"
+        endmenu
+
+        menu "Attributes"
+            config TB_ATTR_TOPIC
+                string "Thingsboard Attributes Request Topic"
+                default "v1/devices/me/attributes"
+                help
+                    Topic to subscribe to receive attribute updates
+    
+            config TB_ATTR_RESPONSE_TOPIC
+                string "Thingsboard Attributes Response Topic"
+                default "v1/devices/me/attributes/response/+"
+                help
+                    Topic to subscribe to
+        endmenu
+
+        menu "OTA"
+            config TB_OTA_FW_TOPIC
+                string "Thingsboard OTA Firmware Topic"
+                default "v2/fw/response/+"
+                help
+                    Topic to subscribe to to receive ota firmware updates
+    
+            config TB_OTA_SW_TOPIC
+                string "Thingsboard OTA Software Topic"
+                default "v2/sw/response/+"
+                help
+                    Topic to subscribe to to receive ota software updates
+        endmenu
+
+    endmenu
+
+endmenu
+
+
+
+menu "Com NVS Configuration"
+
+    config NVS_KEY_TB_TOKEN
+        string "Key associated with the access token provisioned by thingsboard"
+        default "tb_prov_token"
+
+    config NVS_KEY_TB_CTX
+        string "Key associated with the node's context"
+        default "tb_node_ctx"
+
+endmenu
+
+
+
+
+menu "Com OTA Configuration"
+
+    config OTA_FIRMWARE_UPGRADE_URL
+        string "firmware upgrade url endpoint"
+        default "https://192.168.0.3:8070/hello_world.bin"
+        help
+            URL of server which hosts the firmware
+            image.
+
+    config OTA_USE_CERT_BUNDLE
+        bool "Enable certificate bundle"
+        default y
+        depends on MBEDTLS_CERTIFICATE_BUNDLE
+        help
+            Enable trusted root certificate bundle. This approach allows to have
+            OTA updates functional with any public server without requirement
+            to explicitly add its server certificate.
+
+    config OTA_FIRMWARE_UPGRADE_URL_FROM_STDIN
+        bool
+        default y if OTA_FIRMWARE_UPGRADE_URL = "FROM_STDIN"
+
+    config OTA_SKIP_COMMON_NAME_CHECK
+        bool "Skip server certificate CN fieldcheck"
+        default n
+        help
+            This allows you to skip the validation of OTA server certificate CN field.
+
+    config OTA_FIRMWARE_UPGRADE_BIND_IF
+        bool "Support firmware upgrade bind specified interface"
+        default n
+        help
+            This allows you to bind specified interface in OTA example.
+
+    choice OTA_FIRMWARE_UPGRADE_BIND_IF_TYPE
+        prompt "Choose OTA data bind interface"
+        default OTA_FIRMWARE_UPGRADE_BIND_IF_STA
+        depends on OTA_FIRMWARE_UPGRADE_BIND_IF
+        help
+            Select which interface type of OTA data go through.
+
+        config OTA_FIRMWARE_UPGRADE_BIND_IF_STA
+            bool "Bind wifi station interface"
+            depends on OTA_CONNECT_WIFI
+            help
+                Select wifi station interface to pass the OTA data.
+
+        config OTA_FIRMWARE_UPGRADE_BIND_IF_ETH
+            bool "Bind ethernet interface"
+            depends on OTA_CONNECT_ETHERNET
+            help
+                Select ethernet interface to pass the OTA data.
+    endchoice
+endmenu

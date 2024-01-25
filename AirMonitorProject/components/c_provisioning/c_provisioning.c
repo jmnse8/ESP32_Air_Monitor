@@ -50,15 +50,14 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
             break;
         case WIFI_EVENT_STA_DISCONNECTED:
             ESP_LOGI(TAG, "Disconnected. Connecting to the AP again...");
+            esp_event_post(C_PROVISIONING_EVENT_BASE, C_PROVISIONG_EVENT_DISCONNECTED, (void *)NULL, 0, 0);
             esp_wifi_connect();
             break;
         case WIFI_EVENT_AP_STACONNECTED:
             ESP_LOGI(TAG, "SoftAP transport: Connected!");
             break;
         case WIFI_EVENT_AP_STADISCONNECTED:
-            ESP_LOGI(TAG, "SoftAP transport: Disconnected!");
-            //Enviar evento de aprovisionamiento compeltado aqui
-            
+            ESP_LOGI(TAG, "SoftAP transport: Disconnected!");            
             break;
         default:
             break;
@@ -259,6 +258,6 @@ void provisioning_init(void)
         /* Wait for Wi-Fi connection */
         xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, true, true, portMAX_DELAY);
     }
-
+    esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
 
 }

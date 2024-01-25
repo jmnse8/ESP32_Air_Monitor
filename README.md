@@ -23,8 +23,6 @@ The main project is the one named **AirMonitorProject**, the other is only for *
 ### I2C
 [Enlace a **readme**](AirMonitorProject/components/c_I2C/README.md)
 
-### Bluetooth
+### BLE
 
-Since it wouldn't fit in the main branch with OTA, the Bluetooth component for the people counter is located in a different branch. (feature/PI-21)
-
-[Enlace a rama](https://github.com/jmnse8/Proyecto-final/tree/feature/PI-21)
+[Enlace a **readme**](AirMonitorProject/components/c_ble/README.md)

@@ -6,7 +6,7 @@ The main project is the one named **AirMonitorProject**, the other is only for *
 [Enlace a **readme**](AirMonitorProject/components/c_mqtt/README.md)
 
 ### CoAP
-[Enlace a **readme**](AirMonitorProjectCOAP/README.md)
+[Enlace a **readme**](AirMonitorProjectCoAP/README.md)
 
 ### DEEP SLEEP
 [Enlace a **readme**](AirMonitorProject/components/c_deepSleep/README.md)

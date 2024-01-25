@@ -35,9 +35,9 @@ static void obtain_time(void)
 {
     ESP_LOGI(TAG, "Initializing and starting SNTP");
 
-    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("0.europe.pool.ntp.org");
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("0.europe.pool.ntp.org");//"pool.ntp.org");
 
-    config.sync_cb = time_sync_notification_cb;
+    config.sync_cb = time_sync_notification_cb;     // Note: This is only needed if we want
 
     esp_netif_sntp_init(&config);
     // wait for time to be set

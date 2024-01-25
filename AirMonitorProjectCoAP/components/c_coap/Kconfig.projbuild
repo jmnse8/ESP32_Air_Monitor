@@ -1,0 +1,9 @@
+menu "Com COAP Configuration"
+
+    config COAP_HOST_NAME
+        string "Host name"
+        default "localhost"
+        help
+            hostname of the server
+
+endmenu

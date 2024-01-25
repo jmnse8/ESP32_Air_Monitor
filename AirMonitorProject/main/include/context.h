@@ -44,6 +44,11 @@ enum NODE_STATE_ENUM{
     NODE_STATE_REGULAR,
 
     /**
+     * NODE_STATE_REGULAR: We've got Wifi credentials & access token, but Wifi has suddenly disconnected
+    */
+    NODE_STATE_WIFI_DISCONNECTED,
+
+    /**
      * NODE_STATE_INVALID_DATA: If any of the provisioned data is invalid
     */
     NODE_STATE_INVALID_DATA,

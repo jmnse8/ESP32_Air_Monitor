@@ -140,7 +140,6 @@ void context_set_node_ctx(char *c, int save){
             nvs_write_string(CONFIG_NVS_KEY_TB_CTX, NODE_CONTEXT);
 
         ESP_LOGI(TAG, "NODE_CONTEXT IS NOW %s", NODE_CONTEXT);
-
     }
 }
 

@@ -60,20 +60,18 @@ void setup(){
     nvs_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+    init_event_handlers();
     provisioning_init();
 
     int status = context_refresh_node_status(NULL);
-    init_event_handlers();
     if(status!=NODE_STATE_PROV){
         mqtt_init();
         ble_init();
         si7021_init_sensor();
         sgp30_init_sensor();
-
-        //sntp_sync_time_init();
-        //init_deep_sleep();
+        sntp_sync_time_init();
+        init_deep_sleep();
     }
-    
 
     
     

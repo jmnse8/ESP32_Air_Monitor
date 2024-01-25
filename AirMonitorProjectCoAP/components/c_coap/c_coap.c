@@ -59,7 +59,9 @@ void coap_start_client(){
 
     session = coap_new_client_session(ctx, NULL, dst_addr,
                                           uri.scheme == COAP_URI_SCHEME_COAP_TCP ? COAP_PROTO_TCP :
-                                          COAP_PROTO_UDP);//coap_start_pki_session(ctx, dst_addr, &uri);
+                                          COAP_PROTO_UDP);
+                                          
+    //coap_start_pki_session(ctx, dst_addr, &uri);
 
     if (!session) {
         ESP_LOGE(TAG, "coap_new_client_session() failed");
